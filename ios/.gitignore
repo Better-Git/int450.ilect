@@ -1,0 +1,42 @@
+# Any lines with a period (.) mean they're hidden.
+
+# Default .gitignore directories
+.generated/
+.idea/
+.svn/
+.symlinks/
+.vagrant/
+DerivedData/
+/Flutter/flutter_assets/
+Pods/
+build/
+
+# Default .gitignore files
+.DS_Store
+.sconsign.dblite
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.pbxuser
+*.perspectivev3
+*.pyc
+*.swp
+!default.mode1v3
+!default.mode2v3
+!default.pbxuser
+!default.perspectivev3
+/Flutter/App.framework
+/Flutter/app.flx
+/Flutter/app.zip
+/Flutter/Flutter.framework
+/Flutter/Generated.xcconfig
+/ServiceDefinitions.json
+GeneratedPluginRegistrant.h
+GeneratedPluginRegistrant.m
+profile
+xcuserdata
+
+# Others
+Icon?
+*sync/
+.tags*

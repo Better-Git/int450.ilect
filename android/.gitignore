@@ -1,0 +1,15 @@
+# Any lines with a period (.) mean they're hidden.
+
+# Default .gitignore directories
+.gradle
+/.idea/libraries
+/build
+/captures
+
+# Default .gitignore files
+.DS_Store
+/.idea/workspace.xml
+*.class
+*.iml
+GeneratedPluginRegistrant.java
+/local.properties

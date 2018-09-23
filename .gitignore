@@ -1,0 +1,20 @@
+# Any lines with a period (.) mean they're hidden.
+
+# Default .gitignore directories
+.dart_tool/
+.pub/
+build/
+
+# Default .gitignore files
+.DS_Store
+.flutter-plugins
+.packages
+
+# Ignored directories
+.idea/
+gen/
+test/
+
+# Ignored files
+*.iml
+pubspec.lock
