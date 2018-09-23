@@ -1,4 +1,4 @@
-# ilect_app
+# iLect
 
 A new augmentative and alternative communication (AAC) application.
 
