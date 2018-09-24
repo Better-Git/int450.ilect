@@ -32,6 +32,24 @@ class ILectApp extends StatelessWidget {
   }
 }
 
+class FeedbackPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.send),
+            onPressed: () {},
+          ),
+        ],
+        title: Text("Feedback"),
+      ),
+      body: Center(),
+    );
+  }
+}
+
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.title}) : super(key: key);
 
@@ -50,6 +68,52 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => new _HomePageState();
 }
 
+class PPPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Privacy Policy"),
+      ),
+      body: Center(),
+    );
+  }
+}
+
+class SecondPage extends StatelessWidget {
+  SecondPage({Key key, @required this.categoryName}) : super(key: key);
+
+  final String categoryName;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      body: new Container(
+        child: new GridView.count(
+          children: new List.generate(4, (i) => new _CategoryCard(i)),
+          controller: new ScrollController(keepScrollOffset: false),
+          crossAxisCount: 2,
+          scrollDirection: Axis.vertical,
+          shrinkWrap: true,
+        ),
+      ),
+      bottomNavigationBar: _BottomAppBar(categoryName),
+    );
+  }
+}
+
+class ToSPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Terms of Service"),
+      ),
+      body: Center(),
+    );
+  }
+}
+
 class _HomePageState extends State<HomePage> {
   int _counter = 0;
 
@@ -64,29 +128,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<bool> _onHardwareBackPressed() {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) => new AlertDialog(
-            actions: <Widget>[
-              new FlatButton(
-                child: new Text('No'),
-                onPressed: () => Navigator.of(context).pop(false),
-              ),
-              new FlatButton(
-                child: new Text('Yes'),
-                onPressed: () => Navigator.of(context).pop(true),
-//                  exit(0);
-                textColor: Colors.red,
-              ),
-            ],
-            content: new Text(
-                'Are you sure you want to exit iLect?\n\nApp may still be suspended via "Recent Apps"'),
-            title: new Text('Confirm Exit'),
-          ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -95,56 +136,146 @@ class _HomePageState extends State<HomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return new WillPopScope(
-      child: new Scaffold(
-        body: new Container(
-          child: new GridView.count(
-            children: new List.generate(4, (i) => new _CategoryCard(i)),
-            controller: new ScrollController(keepScrollOffset: false),
-            crossAxisCount: 2,
-            scrollDirection: Axis.vertical,
-            shrinkWrap: true,
-          ),
+    return new Scaffold(
+      body: new Container(
+        child: new GridView.count(
+          children: new List.generate(4, (i) => new _CategoryCard(i)),
+          controller: new ScrollController(keepScrollOffset: false),
+          crossAxisCount: 2,
+          scrollDirection: Axis.vertical,
+          shrinkWrap: true,
         ),
-//        floatingActionButton: new FloatingActionButton(
-//          child: new Icon(Icons.add),
-//          onPressed: _incrementCounter,
-//          tooltip: 'Increment',
-//        ),
-//        floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-        bottomNavigationBar: new BottomAppBar(
-          child: new Container(
-            child: new Row(
-              children: <Widget>[
-                new IconButton(
-                  icon: new Icon(Icons.menu),
-                  onPressed: () => showModalBottomSheet<Null>(
-                        builder: (BuildContext context) => new _BottomDrawer(),
-                        context: context,
-                      ),
-                ),
-                new Text(
-                  widget.title,
-                  style: Theme.of(context).textTheme.title,
-                ),
-                new IconButton(
-                  icon: new Icon(Icons.share),
-                  onPressed: () {
-                    Share.share('ฉันได้ใช้แอป iLect แล้วนะ\nอยากจะให้เพื่อนๆมาลองใช้กัน\n\nดาวน์โหลดได้ที่ ...');
-                  },
-                ),
-              ],
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      ),
+      bottomNavigationBar: _BottomAppBar.extended(widget.title, 1),
+    );
+  }
+}
+
+class _BottomAppBar extends StatelessWidget {
+  _BottomAppBar(var str) : _input = str;
+  _BottomAppBar.extended(var str, int i)
+      : _index = i,
+        _input = str;
+
+  int _index = 0;
+  var _input = '', _rightIconButton;
+
+  @override
+  Widget build(BuildContext context) {
+    switch (_index) {
+      case 1:
+        {
+          _rightIconButton = new IconButton(
+            icon: new Icon(Icons.share),
+            onPressed: () => Share.share(
+                'ฉันได้ใช้แอป iLect แล้วนะ\nอยากจะให้เพื่อนๆมาลองใช้กัน\n\nดาวน์โหลดได้ที่ ...'),
+          );
+        }
+        break;
+      default:
+        {
+          var _rightIcon;
+
+          if (Platform.isAndroid) {
+            _rightIcon = new Icon(Icons.arrow_back);
+          } else if (Platform.isIOS) {
+            _rightIcon = new Icon(Icons.arrow_back_ios);
+          }
+
+          _rightIconButton = new IconButton(
+            icon: _rightIcon,
+            onPressed: () => Navigator.pop(context),
+          );
+        }
+        break;
+    }
+
+    return new BottomAppBar(
+      child: new Container(
+        child: new Row(
+          children: <Widget>[
+            new IconButton(
+              icon: new Icon(Icons.menu),
+              onPressed: () => showModalBottomSheet<Null>(
+                  builder: (BuildContext context) => new _BottomDrawer(),
+                  context: context),
             ),
-            decoration: new BoxDecoration(
-              border: new Border(
-                top: new BorderSide(color: Colors.blue, width: 2.0),
-              ),
+            new Text(
+              _input,
+              style: Theme.of(context).textTheme.title,
             ),
+            _rightIconButton,
+          ],
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        ),
+        decoration: new BoxDecoration(
+          border: new Border(
+            top: new BorderSide(color: Colors.blue, width: 2.0),
           ),
         ),
       ),
-      onWillPop: _onHardwareBackPressed,
+    );
+  }
+}
+
+class _BottomDrawer extends StatelessWidget {
+//  bool _downloaded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Column(
+      children: <Widget>[
+//          new SwitchListTile(
+//            onChanged: (bool value) {
+//              (() {
+//                _downloaded != value;
+//              });
+//            },
+//            secondary: new Icon(Icons.cloud_off),
+//            title: new Text('Offline Pictures'),
+//            value: _downloaded,
+//          ),
+//          new Divider(
+//            height: 5.0,
+//          ),
+        new ListTile(
+          onTap: () => Navigator.push(
+              context, MaterialPageRoute(builder: (context) => FeedbackPage())),
+          title: new Text('Send Feedback'),
+        ),
+        new Divider(
+          height: 5.0,
+        ),
+        new AboutListTile(
+          aboutBoxChildren: [
+            new Padding(
+                child: new Column(
+                  children: <Widget>[
+                    new FlatButton(
+                      child: new Text('Terms of Service'),
+                      onPressed: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (context) => ToSPage())),
+                      textColor: Colors.black87,
+                    ),
+                    new FlatButton(
+                      child: new Text('Privacy Policy'),
+                      onPressed: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (context) => PPPage())),
+                      textColor: Colors.black87,
+                    ),
+                  ],
+                ),
+                padding: new EdgeInsets.only(top: 40.0)),
+          ],
+          applicationIcon: new Image.asset('assets/icon.png', scale: 6.5),
+          applicationLegalese:
+              '© 2018 School of Information Technology, KMUTT.\nAll rights reserved.',
+          applicationName: 'iLect',
+          applicationVersion: 'version 0.2',
+          icon: new Icon(Icons.info_outline),
+        ),
+      ],
+      mainAxisSize: MainAxisSize.min,
     );
   }
 }
@@ -196,7 +327,11 @@ class _CategoryCard extends StatelessWidget {
             child: new Material(
               child: new InkWell(
                 borderRadius: BorderRadius.all(Radius.circular(40.0)),
-                onTap: () {},
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            SecondPage(categoryName: actions[_index]))),
                 splashColor: Color.fromARGB(30, 100, 100, 100),
               ),
               color: Colors.transparent,
@@ -209,65 +344,6 @@ class _CategoryCard extends StatelessWidget {
         borderRadius: new BorderRadius.circular(38.0),
         side: new BorderSide(color: Colors.blue, width: 2.0),
       ),
-    );
-  }
-}
-
-class _BottomDrawer extends StatelessWidget {
-//  bool _downloaded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return new Column(
-      children: <Widget>[
-//          new SwitchListTile(
-//            onChanged: (bool value) {
-//              (() {
-//                _downloaded != value;
-//              });
-//            },
-//            secondary: new Icon(Icons.cloud_off),
-//            title: new Text('Offline Pictures'),
-//            value: _downloaded,
-//          ),
-//          new Divider(
-//            height: 5.0,
-//          ),
-        new ListTile(
-          onTap: () {},
-          title: new Text('Send Feedback'),
-        ),
-        new Divider(
-          height: 5.0,
-        ),
-        new AboutListTile(
-          aboutBoxChildren: [
-            new Padding(
-                child: new Column(
-                  children: <Widget>[
-                    new FlatButton(
-                      child: new Text('Terms of Service'),
-                      onPressed: () {},
-                      textColor: Colors.black87,
-                    ),
-                    new FlatButton(
-                      child: new Text('Privacy Policy'),
-                      onPressed: () {},
-                      textColor: Colors.black87,
-                    ),
-                  ],
-                ),
-                padding: new EdgeInsets.only(top: 40.0)),
-          ],
-          applicationIcon: new Icon(Icons.account_circle),
-          applicationLegalese:
-              '© 2018 School of Information Technology, KMUTT.\nAll rights reserved.',
-          applicationName: 'iLect',
-          applicationVersion: 'version 0.2',
-          icon: new Icon(Icons.info_outline),
-        ),
-      ],
-      mainAxisSize: MainAxisSize.min,
     );
   }
 }
