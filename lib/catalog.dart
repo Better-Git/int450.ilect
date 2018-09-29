@@ -5,12 +5,12 @@ import 'package:ilect_app/provider.dart';
 import 'package:share/share.dart';
 
 class Catalog {
-  Widget bottomAppBar(var str) {
+  Widget bottomAppBar(String str) {
     return _BottomAppBar(str);
   }
 
-  Widget bottomAppBarExtended(var str, bool b) {
-    return _BottomAppBar.extended(str, b);
+  Widget bottomAppBarExtended(bool b, String str) {
+    return _BottomAppBar.extended(b, str);
   }
 
   Widget categoryCard(int i, List list) {
@@ -23,23 +23,23 @@ class Catalog {
 }
 
 class _BottomAppBar extends StatelessWidget {
-  _BottomAppBar(var str) : _input = str;
-  _BottomAppBar.extended(var str, bool b)
+  _BottomAppBar(String str) : _input = str;
+  _BottomAppBar.extended(bool b, String str)
       : _bool = b,
         _input = str;
 
   bool _bool = false;
-  var _input = '', _rightIconButton;
+  String _input = '';
+  var _rightIconButton;
 
   @override
   Widget build(BuildContext context) {
     switch (_bool) {
       case true:
         {
-          _rightIconButton = new IconButton(
-            icon: new Icon(Icons.share),
-            onPressed: () => Share.share(
-                'ฉันได้ใช้แอป iLect แล้วนะ\nอยากจะให้เพื่อนๆมาลองใช้กัน\n\nดาวน์โหลดได้ที่ ...'),
+          _rightIconButton = IconButton(
+            icon: Icon(Icons.share),
+            onPressed: () => Share.share(share),
           );
         }
         break;
@@ -47,28 +47,29 @@ class _BottomAppBar extends StatelessWidget {
         {
           var _rightIcon;
           if (Platform.isAndroid) {
-            _rightIcon = new Icon(Icons.arrow_back);
+            _rightIcon = Icon(Icons.arrow_back);
           } else if (Platform.isIOS) {
-            _rightIcon = new Icon(Icons.arrow_back_ios);
+            _rightIcon = Icon(Icons.arrow_back_ios);
           }
-          _rightIconButton = new IconButton(
+          _rightIconButton = IconButton(
             icon: _rightIcon,
             onPressed: () => Navigator.pop(context),
           );
         }
         break;
     }
-    return new BottomAppBar(
-      child: new Container(
-        child: new Row(
+    return BottomAppBar(
+      child: Container(
+        child: Row(
           children: <Widget>[
-            new IconButton(
-              icon: new Icon(Icons.menu),
+            IconButton(
+              icon: Icon(Icons.menu),
               onPressed: () => showModalBottomSheet<Null>(
-                  builder: (BuildContext context) => _BottomDrawer(),
-                  context: context),
+                    builder: (BuildContext context) => _BottomDrawer(),
+                    context: context,
+                  ),
             ),
-            new Text(
+            Text(
               _input,
               style: Theme.of(context).textTheme.title,
             ),
@@ -76,9 +77,9 @@ class _BottomAppBar extends StatelessWidget {
           ],
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
         ),
-        decoration: new BoxDecoration(
-          border: new Border(
-            top: new BorderSide(color: Colors.blue, width: 2.0),
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: Colors.blue, width: 2.0),
           ),
         ),
       ),
@@ -91,56 +92,58 @@ class _BottomDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new Column(
+    return Column(
       children: <Widget>[
-//        new SwitchListTile(
+//        SwitchListTile(
 //          onChanged: (bool value) {
 //            (() {
 //              _downloaded = value;
 //            });
 //          },
-//          secondary: new Icon(Icons.cloud_off),
-//          title: new Text('Offline Pictures'),
+//          secondary: Icon(Icons.cloud_off),
+//          title: Text(op),
 //          value: _downloaded,
 //        ),
-//        new Divider(
-//          height: 5.0,
-//        ),
-        new ListTile(
+//        Divider(height: 5.0),
+        ListTile(
           onTap: () => Navigator.push(
-              context, MaterialPageRoute(builder: (context) => page01)),
-          title: new Text('Send Feedback'),
+                context,
+                MaterialPageRoute(builder: (context) => page01),
+              ),
+          title: Text(feedback),
         ),
-        new Divider(
-          height: 5.0,
-        ),
-        new AboutListTile(
+        Divider(height: 5.0),
+        AboutListTile(
           aboutBoxChildren: [
-            new Padding(
-                child: new Column(
-                  children: <Widget>[
-                    new FlatButton(
-                      child: new Text('Terms of Service'),
-                      onPressed: () => Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => page02)),
-                      textColor: Colors.black87,
-                    ),
-                    new FlatButton(
-                      child: new Text('Privacy Policy'),
-                      onPressed: () => Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => page03)),
-                      textColor: Colors.black87,
-                    ),
-                  ],
-                ),
-                padding: new EdgeInsets.only(top: 40.0)),
+            Padding(
+              child: Column(
+                children: <Widget>[
+                  FlatButton(
+                    child: Text(tos),
+                    onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => page02),
+                        ),
+                    textColor: Colors.black87,
+                  ),
+                  FlatButton(
+                    child: Text(pp),
+                    onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => page03),
+                        ),
+                    textColor: Colors.black87,
+                  ),
+                ],
+              ),
+              padding: EdgeInsets.only(top: 40.0),
+            ),
           ],
-          applicationIcon: new Image.asset('assets/icon.png', scale: 6.5),
-          applicationLegalese:
-              '© 2018 School of Information Technology, KMUTT.\nAll rights reserved.',
-          applicationName: 'iLect',
-          applicationVersion: 'version 0.3',
-          icon: new Icon(Icons.info_outline),
+          applicationIcon: Image.asset(icon, scale: 6.5),
+          applicationLegalese: copyright,
+          applicationName: title,
+          applicationVersion: version,
+          icon: Icon(Icons.info_outline),
         ),
       ],
       mainAxisSize: MainAxisSize.min,
@@ -158,37 +161,39 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new Card(
-      child: new Stack(
+    return Card(
+      child: Stack(
         children: <Widget>[
-          new Positioned.fill(
-            child: new Padding(
-              child: new Column(
+          Positioned.fill(
+            child: Padding(
+              child: Column(
                 children: <Widget>[
-                  new Expanded(
-                    child: new CacheImage.firebase(path: _items[_index].pic),
+                  Expanded(
+                    child: CacheImage.firebase(path: _items[_index].pic),
                   ),
-                  new Padding(
-                    child: new Text(
+                  Padding(
+                    child: Text(
                       _items[_index].name,
                       style: TextStyle(fontSize: 30.0),
                     ),
-                    padding: new EdgeInsets.only(bottom: 11.0, top: 11.0),
+                    padding: EdgeInsets.only(bottom: 11.0, top: 11.0),
                   ),
                 ],
               ),
-              padding: new EdgeInsets.only(top: 19.0),
+              padding: EdgeInsets.only(top: 19.0),
             ),
           ),
-          new Positioned.fill(
-            child: new Material(
-              child: new InkWell(
+          Positioned.fill(
+            child: Material(
+              child: InkWell(
                 borderRadius: BorderRadius.all(Radius.circular(40.0)),
                 onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
+                      context,
+                      MaterialPageRoute(
                         builder: (context) =>
-                            Provider().dataPass(false, _items[_index].name))),
+                            Provider().dataPass(false, _items[_index].name),
+                      ),
+                    ),
                 splashColor: Color.fromARGB(30, 100, 100, 100),
               ),
               color: Colors.transparent,
@@ -197,9 +202,9 @@ class _CategoryCard extends StatelessWidget {
         ],
       ),
       elevation: 0.5,
-      shape: new RoundedRectangleBorder(
-        borderRadius: new BorderRadius.circular(38.0),
-        side: new BorderSide(color: Colors.blue, width: 2.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(38.0),
+        side: BorderSide(color: Colors.blue, width: 2.0),
       ),
     );
   }
@@ -215,16 +220,16 @@ class _ObjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new Card(
-      child: new Stack(
+    return Card(
+      child: Stack(
         children: <Widget>[
-          new Padding(
-            child: new Column(
+          Padding(
+            child: Column(
               children: <Widget>[
-                new CacheImage.firebase(path: _items[_index].pic),
-                new Row(
+                CacheImage.firebase(path: _items[_index].pic),
+                Row(
                   children: <Widget>[
-                    new Text(
+                    Text(
                       _items[_index].name,
                       style: TextStyle(fontSize: 30.0),
                     ),
@@ -235,15 +240,19 @@ class _ObjectCard extends StatelessWidget {
             ),
             padding: EdgeInsets.all(13.0),
           ),
-          new Positioned.fill(
-            child: new Material(
-              child: new InkWell(
-                borderRadius: BorderRadius.all(Radius.circular(40.0)),
+          Positioned.fill(
+            child: Material(
+              child: InkWell(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(40.0),
+                ),
                 onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
+                      context,
+                      MaterialPageRoute(
                         builder: (context) =>
-                            Provider().dataPass(true, _items[_index].name))),
+                            Provider().dataPass(true, _items[_index].name),
+                      ),
+                    ),
                 splashColor: Color.fromARGB(30, 100, 100, 100),
               ),
               color: Colors.transparent,
@@ -252,9 +261,9 @@ class _ObjectCard extends StatelessWidget {
         ],
       ),
       elevation: 0.5,
-      shape: new RoundedRectangleBorder(
-        borderRadius: new BorderRadius.circular(38.0),
-        side: new BorderSide(color: Colors.blue, width: 2.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(38.0),
+        side: BorderSide(color: Colors.blue, width: 2.0),
       ),
     );
   }

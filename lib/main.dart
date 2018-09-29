@@ -18,14 +18,10 @@ class ILectApp extends StatelessWidget {
         statusBarIconBrightness: Brightness.dark,
       ),
     );
-    return new MaterialApp(
-      home: new HomePage(
-        title: title,
-      ),
-      theme: new ThemeData(
-        // This is the theme of your application.
-        primaryColor: Colors.white,
-      ),
+    return MaterialApp(
+      home: HomePage(title: title),
+      // This is the theme of your application.
+      theme: ThemeData(primaryColor: Colors.white),
       title: title,
     );
   }
@@ -42,7 +38,7 @@ class FeedbackPage extends StatelessWidget {
             onPressed: () {},
           ),
         ],
-        title: Text("Feedback"),
+        title: Text(feedback.substring(5)),
       ),
       body: Center(),
     );
@@ -64,7 +60,7 @@ class HomePage extends StatefulWidget {
   final String title;
 
   @override
-  _HomePageState createState() => new _HomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
 class PPPage extends StatelessWidget {
@@ -72,7 +68,7 @@ class PPPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Privacy Policy"),
+        title: Text(pp),
       ),
       body: Center(),
     );
@@ -85,7 +81,7 @@ class SecondPage extends StatefulWidget {
   final String categoryName;
 
   @override
-  _SecondPageState createState() => new _SecondPageState();
+  _SecondPageState createState() => _SecondPageState();
 }
 
 class ThirdPage extends StatelessWidget {
@@ -94,14 +90,28 @@ class ThirdPage extends StatelessWidget {
   final String name;
 
   Widget build(BuildContext context) {
-    return new Scaffold(
-      body: new Container(
-        child: new Center(
-          child: new Text(
-            'ค้นหา\n\n' + name,
-            style: Theme.of(context).textTheme.title,
+    return Scaffold(
+      body: Stack(
+        children: <Widget>[
+          CupertinoPageScaffold(
+            child: CustomScrollView(
+              physics: NeverScrollableScrollPhysics(),
+              slivers: <Widget>[
+                CupertinoSliverNavigationBar(
+                  automaticallyImplyLeading: false,
+                  backgroundColor: Colors.white,
+                  largeTitle: Text(search),
+                ),
+              ],
+            ),
           ),
-        ),
+          Center(
+            child: Text(
+              name,
+              style: Theme.of(context).textTheme.title,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: Catalog().bottomAppBar(title),
     );
@@ -113,7 +123,7 @@ class ToSPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Terms of Service"),
+        title: Text(tos),
       ),
       body: Center(),
     );
@@ -133,7 +143,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _items = new List();
+    _items = List();
     _onCategoryAddedSubscription =
         Provider().cardDataStreamSubscription(category).listen(onCategoryAdded);
   }
@@ -145,8 +155,7 @@ class _HomePageState extends State<HomePage> {
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-
-      _items.add(new CardData.fromSnapshot(false, event.snapshot));
+      _items.add(CardData.fromSnapshot(false, event.snapshot));
     });
   }
 
@@ -154,22 +163,21 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
-    //
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return new Scaffold(
-      body: new Container(
-        child: new GridView.count(
-          children: new List.generate(
-              _items.length, (i) => new Catalog().categoryCard(i, _items)),
-          controller: new ScrollController(keepScrollOffset: false),
+    return Scaffold(
+      body: Container(
+        child: GridView.count(
+          children: List.generate(
+              _items.length, (i) => Catalog().categoryCard(i, _items)),
+          controller: ScrollController(keepScrollOffset: false),
           crossAxisCount: 2,
           scrollDirection: Axis.vertical,
           shrinkWrap: true,
         ),
       ),
-      bottomNavigationBar: Catalog().bottomAppBarExtended(widget.title, true),
+      bottomNavigationBar: Catalog().bottomAppBarExtended(true, widget.title),
     );
   }
 }
@@ -188,7 +196,7 @@ class _SecondPageState extends State<SecondPage> {
   @override
   void initState() {
     super.initState();
-    _items = new List();
+    _items = List();
     switch (widget.categoryName) {
       case 'ดู':
         {
@@ -217,23 +225,17 @@ class _SecondPageState extends State<SecondPage> {
 
   void onObjectAdded(Event event) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-
-      _items.add(new CardData.fromSnapshot(true, event.snapshot));
+      _items.add(CardData.fromSnapshot(true, event.snapshot));
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      body: new Container(
-        child: new ListView(
-          children: new List.generate(
-              _items.length, (i) => new Catalog().objectCard(i, _items)),
+    return Scaffold(
+      body: Container(
+        child: ListView(
+          children: List.generate(
+              _items.length, (i) => Catalog().objectCard(i, _items)),
         ),
       ),
       bottomNavigationBar: Catalog().bottomAppBar(widget.categoryName),

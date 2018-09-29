@@ -2,7 +2,19 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:ilect_app/main.dart';
 
-final String category = 'category', title = 'iLect';
+final String category = 'category',
+    copyright =
+        '© 2018 School of Information Technology, KMUTT.\nAll rights reserved.',
+    feedback = 'Send Feedback',
+    icon = 'assets/icon.png',
+    op = 'Offline Pictures',
+    pp = 'Privacy Policy',
+    search = 'Open in',
+    share =
+        'ฉันได้ใช้แอป iLect แล้วนะ\nอยากจะให้เพื่อนๆมาลองใช้กัน\n\nดาวน์โหลดได้ที่ ...',
+    title = 'iLect',
+    tos = 'Terms of Service',
+    version = 'version 0.3';
 final page01 = FeedbackPage(), page02 = ToSPage(), page03 = PPPage();
 
 class CardData {
