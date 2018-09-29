@@ -226,7 +226,11 @@ class _ObjectCard extends StatelessWidget {
           Padding(
             child: Column(
               children: <Widget>[
-                CacheImage.firebase(path: _items[_index].pic),
+                Padding(
+                  child: CacheImage.firebase(path: _items[_index].pic),
+                  padding: EdgeInsets.only(
+                      bottom: 5.0, left: 16.0, right: 16.0, top: 20.0),
+                ),
                 Row(
                   children: <Widget>[
                     Text(

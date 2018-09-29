@@ -102,14 +102,82 @@ class ThirdPage extends StatelessWidget {
                   backgroundColor: Colors.white,
                   largeTitle: Text(search),
                 ),
+                SliverList(
+                  delegate: SliverChildListDelegate(
+                    <Widget>[
+                      Material(
+                        type: MaterialType.transparency,
+                        child: InkWell(
+                          child: Column(
+                            children: <Widget>[
+                              Container(height: 7.0),
+                              ListTile(
+                                leading: Image.network(
+                                  'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/200px-YouTube_full-color_icon_%282017%29.svg.png',
+                                  scale: 3.0,
+                                ),
+                                title: Text(
+                                  'YouTube',
+                                  style: TextStyle(
+                                      fontSize: 20.0, letterSpacing: -1.0),
+                                ),
+                              ),
+                              Container(height: 7.0),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.of(context).push(CupertinoPageRoute<void>(
+                              builder: (BuildContext context) => ToSPage(),
+                            ));
+                          },
+                        ),
+                      ),
+                      Divider(height: 5.0),
+                      ListTile(
+                        title: Text('(408) 555-1212',
+                            style: TextStyle(fontWeight: FontWeight.w500)),
+                        leading: Icon(
+                          Icons.contact_phone,
+                          color: Colors.blue[500],
+                        ),
+                        onTap: () {},
+                      ),
+                      ListTile(
+                        title: Text('costa@example.com'),
+                        leading: Icon(
+                          Icons.contact_mail,
+                          color: Colors.blue[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-          Center(
-            child: Text(
-              name,
-              style: Theme.of(context).textTheme.title,
+          Container(
+            child: Column(
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Text(
+                      name,
+                      style: TextStyle(
+                        color: CupertinoColors.inactiveGray,
+                        fontSize: 17.0,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(height: 78.0),
+                Column(
+                  children: <Widget>[],
+                ),
+              ],
             ),
+            padding: EdgeInsets.only(left: 16.0, top: 31.0),
           ),
         ],
       ),
