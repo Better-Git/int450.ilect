@@ -76,20 +76,52 @@ class PPPage extends StatelessWidget {
 }
 
 class SecondPage extends StatefulWidget {
-  SecondPage({Key key, @required this.categoryName}) : super(key: key);
+  SecondPage({Key key, @required this.category}) : super(key: key);
 
-  final String categoryName;
+  final String category;
 
   @override
   _SecondPageState createState() => _SecondPageState();
 }
 
 class ThirdPage extends StatelessWidget {
-  ThirdPage({Key key, @required this.name}) : super(key: key);
+  ThirdPage({Key key, @required this.category, @required this.name})
+      : super(key: key);
 
-  final String name;
+  final String category, name;
+  List<Widget> _items;
 
   Widget build(BuildContext context) {
+    switch (category) {
+      case eat:
+      case go:
+        {
+          _items = [
+            Catalog().searchListTile(gmapsIcon, gmaps, name),
+            Catalog().searchListDivider(),
+            Catalog().searchListTile(amapsIcon, amaps, name),
+            Catalog().searchListDivider(),
+            Catalog().searchListTile(chromeIcon, chrome, name),
+            Catalog().searchListDivider(),
+            Catalog().searchListTile(safariIcon, safari, name),
+            Catalog().searchListDivider(),
+          ];
+        }
+        break;
+      case listen:
+      case watch:
+        {
+          _items = [
+            Catalog().searchListTile(youtubeIcon, youtube, name),
+            Catalog().searchListDivider(),
+            Catalog().searchListTile(chromeIcon, chrome, name),
+            Catalog().searchListDivider(),
+            Catalog().searchListTile(safariIcon, safari, name),
+            Catalog().searchListDivider(),
+          ];
+        }
+        break;
+    }
     return Scaffold(
       body: Stack(
         children: <Widget>[
@@ -102,80 +134,26 @@ class ThirdPage extends StatelessWidget {
                   backgroundColor: Colors.white,
                   largeTitle: Text(search),
                 ),
-                SliverList(
-                  delegate: SliverChildListDelegate(
-                    <Widget>[
-                      Material(
-                        type: MaterialType.transparency,
-                        child: InkWell(
-                          child: Column(
-                            children: <Widget>[
-                              Container(height: 7.0),
-                              ListTile(
-                                leading: Image.network(
-                                  'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/200px-YouTube_full-color_icon_%282017%29.svg.png',
-                                  scale: 3.0,
-                                ),
-                                title: Text(
-                                  'YouTube',
-                                  style: TextStyle(
-                                      fontSize: 20.0, letterSpacing: -1.0),
-                                ),
-                              ),
-                              Container(height: 7.0),
-                            ],
-                          ),
-                          onTap: () {
-                            Navigator.of(context).push(CupertinoPageRoute<void>(
-                              builder: (BuildContext context) => ToSPage(),
-                            ));
-                          },
-                        ),
-                      ),
-                      Divider(height: 5.0),
-                      ListTile(
-                        title: Text('(408) 555-1212',
-                            style: TextStyle(fontWeight: FontWeight.w500)),
-                        leading: Icon(
-                          Icons.contact_phone,
-                          color: Colors.blue[500],
-                        ),
-                        onTap: () {},
-                      ),
-                      ListTile(
-                        title: Text('costa@example.com'),
-                        leading: Icon(
-                          Icons.contact_mail,
-                          color: Colors.blue[500],
-                        ),
-                      ),
-                    ],
+                SliverSafeArea(
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate(
+                      _items,
+                    ),
                   ),
+                  top: false,
                 ),
               ],
             ),
           ),
           Container(
-            child: Column(
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Text(
-                      name,
-                      style: TextStyle(
-                        color: CupertinoColors.inactiveGray,
-                        fontSize: 17.0,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ],
-                ),
-                Container(height: 78.0),
-                Column(
-                  children: <Widget>[],
-                ),
-              ],
+            child: Text(
+              name,
+              style: TextStyle(
+                color: CupertinoColors.inactiveGray,
+                fontSize: 17.0,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
+              ),
             ),
             padding: EdgeInsets.only(left: 16.0, top: 31.0),
           ),
@@ -213,7 +191,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _items = List();
     _onCategoryAddedSubscription =
-        Provider().cardDataStreamSubscription(category).listen(onCategoryAdded);
+        Provider().cardDataStreamSubscription(schema0).listen(onCategoryAdded);
   }
 
   void onCategoryAdded(Event event) {
@@ -265,25 +243,25 @@ class _SecondPageState extends State<SecondPage> {
   void initState() {
     super.initState();
     _items = List();
-    switch (widget.categoryName) {
-      case 'ดู':
+    switch (widget.category) {
+      case eat:
         {
-          str = 'looking';
+          str = schema3;
         }
         break;
-      case 'ฟัง':
+      case go:
         {
-          str = 'listen';
+          str = schema4;
         }
         break;
-      case 'หิว':
+      case listen:
         {
-          str = 'Hungry';
+          str = schema2;
         }
         break;
-      case 'ไป':
+      case watch:
         {
-          str = 'go';
+          str = schema1;
         }
         break;
     }
@@ -306,7 +284,8 @@ class _SecondPageState extends State<SecondPage> {
               _items.length, (i) => Catalog().objectCard(i, _items)),
         ),
       ),
-      bottomNavigationBar: Catalog().bottomAppBar(widget.categoryName),
+      bottomNavigationBar:
+          Catalog().bottomAppBar(widget.category, widget.category),
     );
   }
 }

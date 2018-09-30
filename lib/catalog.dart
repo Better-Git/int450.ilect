@@ -1,12 +1,19 @@
 import 'dart:io';
 import 'package:cache_image/cache_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:ilect_app/provider.dart';
 import 'package:share/share.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+String temp = '';
 
 class Catalog {
-  Widget bottomAppBar(String str) {
-    return _BottomAppBar(str);
+  Widget bottomAppBar(String str1, [String str2]) {
+    if (str2 != null && str2.isNotEmpty) {
+      temp = str2;
+    }
+    return _BottomAppBar(str1);
   }
 
   Widget bottomAppBarExtended(bool b, String str) {
@@ -19,6 +26,14 @@ class Catalog {
 
   Widget objectCard(int i, List list) {
     return _ObjectCard(i, list);
+  }
+
+  Widget searchListDivider() {
+    return _searchListDivider();
+  }
+
+  Widget searchListTile(String icon, String title, String name) {
+    return _searchListTile(icon, title, name);
   }
 }
 
@@ -78,10 +93,7 @@ class _BottomAppBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
         ),
         decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(color: Colors.blue, width: 2.0),
-          ),
-        ),
+            border: Border(top: BorderSide(color: Colors.blue, width: 2.0))),
       ),
     );
   }
@@ -104,15 +116,13 @@ class _BottomDrawer extends StatelessWidget {
 //          title: Text(op),
 //          value: _downloaded,
 //        ),
-//        Divider(height: 5.0),
+//        Divider(height: 1.0),
         ListTile(
           onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => page01),
-              ),
+              context, MaterialPageRoute(builder: (context) => page01)),
           title: Text(feedback),
         ),
-        Divider(height: 5.0),
+        Divider(height: 1.0),
         AboutListTile(
           aboutBoxChildren: [
             Padding(
@@ -120,18 +130,14 @@ class _BottomDrawer extends StatelessWidget {
                 children: <Widget>[
                   FlatButton(
                     child: Text(tos),
-                    onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => page02),
-                        ),
+                    onPressed: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => page02)),
                     textColor: Colors.black87,
                   ),
                   FlatButton(
                     child: Text(pp),
-                    onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => page03),
-                        ),
+                    onPressed: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => page03)),
                     textColor: Colors.black87,
                   ),
                 ],
@@ -139,7 +145,7 @@ class _BottomDrawer extends StatelessWidget {
               padding: EdgeInsets.only(top: 40.0),
             ),
           ],
-          applicationIcon: Image.asset(icon, scale: 6.5),
+          applicationIcon: Image.asset(ilectIcon, scale: 6.5),
           applicationLegalese: copyright,
           applicationName: title,
           applicationVersion: version,
@@ -183,22 +189,7 @@ class _CategoryCard extends StatelessWidget {
               padding: EdgeInsets.only(top: 19.0),
             ),
           ),
-          Positioned.fill(
-            child: Material(
-              child: InkWell(
-                borderRadius: BorderRadius.all(Radius.circular(40.0)),
-                onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            Provider().dataPass(false, _items[_index].name),
-                      ),
-                    ),
-                splashColor: Color.fromARGB(30, 100, 100, 100),
-              ),
-              color: Colors.transparent,
-            ),
-          ),
+          _RippleCardEffect(_items[_index].name),
         ],
       ),
       elevation: 0.5,
@@ -229,7 +220,7 @@ class _ObjectCard extends StatelessWidget {
                 Padding(
                   child: CacheImage.firebase(path: _items[_index].pic),
                   padding: EdgeInsets.only(
-                      bottom: 5.0, left: 16.0, right: 16.0, top: 20.0),
+                      bottom: 5.0, left: 16.0, right: 16.0, top: 18.0),
                 ),
                 Row(
                   children: <Widget>[
@@ -244,24 +235,7 @@ class _ObjectCard extends StatelessWidget {
             ),
             padding: EdgeInsets.all(13.0),
           ),
-          Positioned.fill(
-            child: Material(
-              child: InkWell(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(40.0),
-                ),
-                onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            Provider().dataPass(true, _items[_index].name),
-                      ),
-                    ),
-                splashColor: Color.fromARGB(30, 100, 100, 100),
-              ),
-              color: Colors.transparent,
-            ),
-          ),
+          _RippleCardEffect(_items[_index].name, temp),
         ],
       ),
       elevation: 0.5,
@@ -269,6 +243,126 @@ class _ObjectCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(38.0),
         side: BorderSide(color: Colors.blue, width: 2.0),
       ),
+    );
+  }
+}
+
+class _RippleCardEffect extends StatelessWidget {
+  _RippleCardEffect(String str1, [String str2])
+      : _input1 = str1,
+        _input2 = str2;
+
+  String _input1 = '', _input2 = '';
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Material(
+        child: InkWell(
+          borderRadius: BorderRadius.all(Radius.circular(40.0)),
+          onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        Provider().dataPass(_input1, _input2)),
+              ),
+          splashColor: Color.fromARGB(30, 100, 100, 100),
+        ),
+        color: Colors.transparent,
+      ),
+    );
+  }
+}
+
+class _searchListDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      child: Divider(color: Color(0xFFBCBBC1), height: 1.0),
+      padding: EdgeInsets.only(left: 90.0),
+    );
+  }
+}
+
+class _searchListTile extends StatelessWidget {
+  _searchListTile(String icon, String title, String name)
+      : _asset = icon,
+        _input = title,
+        _keyword = name;
+
+  String _asset = '', _input = '', _keyword = '', url = '';
+
+  dynamic _launchURL() async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Error: Could not launch $url';
+    }
+  }
+
+  void _selectTemp() {
+    switch (temp) {
+      case eat:
+      case go:
+        {
+          url = 'https://www.google.co.th/maps/search/$_keyword';
+        }
+        break;
+      case listen:
+      case watch:
+        {
+          url = 'https://www.youtube.com/results?search_query=' + _keyword;
+        }
+        break;
+    }
+    _launchURL();
+  }
+
+  void _handleTap() {
+    switch (_input) {
+      case amaps:
+        {}
+        break;
+      case chrome:
+      case safari:
+        {
+          _selectTemp();
+        }
+        break;
+      case gmaps:
+        {}
+        break;
+      case youtube:
+        {}
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      child: InkWell(
+        child: Column(
+          children: <Widget>[
+            Container(height: 7.0),
+            ListTile(
+              leading: Image.asset(_asset, scale: 3.5),
+              title: Text(
+                _input,
+                style: TextStyle(fontSize: 20.0, letterSpacing: -1.0),
+              ),
+              trailing: Icon(
+                CupertinoIcons.forward,
+                color: Color(0xFFC7C7CC),
+                size: 31.0,
+              ),
+            ),
+            Container(height: 7.0),
+          ],
+        ),
+        onTap: _handleTap,
+      ),
+      type: MaterialType.transparency,
     );
   }
 }

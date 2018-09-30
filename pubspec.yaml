@@ -23,6 +23,7 @@ dependencies:
 
   firebase_database: ^1.0.4
   share: ^0.5.3
+  url_launcher: ^4.0.0
 
 dev_dependencies:
   flutter_test:
