@@ -9,6 +9,10 @@ const String
     listen = 'ฟัง',
     watch = 'ดู',
 
+    // External links
+    gmapsUrl = 'https://www.google.co.th/maps/search/',
+    youtubeUrl = 'https://www.youtube.com/results?search_query=',
+
     // Icon titles
     amaps = 'Maps',
     chrome = 'Chrome',
@@ -48,6 +52,7 @@ final String
     schema3 = 'Hungry',
     schema4 = 'go';
 final page01 = FeedbackPage(), page02 = ToSPage(), page03 = PPPage();
+String url = '';
 
 class CardData {
   CardData(this._id, this._name, this._pic);

@@ -32,8 +32,8 @@ class Catalog {
     return _searchListDivider();
   }
 
-  Widget searchListTile(String icon, String title, String name) {
-    return _searchListTile(icon, title, name);
+  Widget searchListTile(String icon, String title) {
+    return _searchListTile(icon, title);
   }
 }
 
@@ -285,40 +285,14 @@ class _searchListDivider extends StatelessWidget {
 }
 
 class _searchListTile extends StatelessWidget {
-  _searchListTile(String icon, String title, String name)
+  _searchListTile(String icon, String title, onTap)
       : _asset = icon,
-        _input = title,
-        _keyword = name;
+        _input = title;
 
-  String _asset = '', _input = '', _keyword = '', url = '';
+  String _asset = '', _input = '';
+  var onTap;
 
-  dynamic _launchURL() async {
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Error: Could not launch $url';
-    }
-  }
-
-  void _selectTemp() {
-    switch (temp) {
-      case eat:
-      case go:
-        {
-          url = 'https://www.google.co.th/maps/search/$_keyword';
-        }
-        break;
-      case listen:
-      case watch:
-        {
-          url = 'https://www.youtube.com/results?search_query=' + _keyword;
-        }
-        break;
-    }
-    _launchURL();
-  }
-
-  void _handleTap() {
+  void _handleTap() async {
     switch (_input) {
       case amaps:
         {}
@@ -326,7 +300,11 @@ class _searchListTile extends StatelessWidget {
       case chrome:
       case safari:
         {
-          _selectTemp();
+          if (await canLaunch(url)) {
+            await launch(url);
+          } else {
+            throw 'Error: Could not launch $url';
+          }
         }
         break;
       case gmaps:

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ilect_app/catalog.dart';
 import 'package:ilect_app/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() => runApp(new ILectApp());
 
@@ -84,84 +85,14 @@ class SecondPage extends StatefulWidget {
   _SecondPageState createState() => _SecondPageState();
 }
 
-class ThirdPage extends StatelessWidget {
+class ThirdPage extends StatefulWidget {
   ThirdPage({Key key, @required this.category, @required this.name})
       : super(key: key);
 
   final String category, name;
-  List<Widget> _items;
 
-  Widget build(BuildContext context) {
-    switch (category) {
-      case eat:
-      case go:
-        {
-          _items = [
-            Catalog().searchListTile(gmapsIcon, gmaps, name),
-            Catalog().searchListDivider(),
-            Catalog().searchListTile(amapsIcon, amaps, name),
-            Catalog().searchListDivider(),
-            Catalog().searchListTile(chromeIcon, chrome, name),
-            Catalog().searchListDivider(),
-            Catalog().searchListTile(safariIcon, safari, name),
-            Catalog().searchListDivider(),
-          ];
-        }
-        break;
-      case listen:
-      case watch:
-        {
-          _items = [
-            Catalog().searchListTile(youtubeIcon, youtube, name),
-            Catalog().searchListDivider(),
-            Catalog().searchListTile(chromeIcon, chrome, name),
-            Catalog().searchListDivider(),
-            Catalog().searchListTile(safariIcon, safari, name),
-            Catalog().searchListDivider(),
-          ];
-        }
-        break;
-    }
-    return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          CupertinoPageScaffold(
-            child: CustomScrollView(
-              physics: NeverScrollableScrollPhysics(),
-              slivers: <Widget>[
-                CupertinoSliverNavigationBar(
-                  automaticallyImplyLeading: false,
-                  backgroundColor: Colors.white,
-                  largeTitle: Text(search),
-                ),
-                SliverSafeArea(
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate(
-                      _items,
-                    ),
-                  ),
-                  top: false,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            child: Text(
-              name,
-              style: TextStyle(
-                color: CupertinoColors.inactiveGray,
-                fontSize: 17.0,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.4,
-              ),
-            ),
-            padding: EdgeInsets.only(left: 16.0, top: 31.0),
-          ),
-        ],
-      ),
-      bottomNavigationBar: Catalog().bottomAppBar(title),
-    );
-  }
+  @override
+  _ThirdPageState createState() => _ThirdPageState();
 }
 
 class ToSPage extends StatelessWidget {
@@ -286,6 +217,100 @@ class _SecondPageState extends State<SecondPage> {
       ),
       bottomNavigationBar:
           Catalog().bottomAppBar(widget.category, widget.category),
+    );
+  }
+}
+
+class _ThirdPageState extends State<ThirdPage> {
+  List<Widget> _items;
+
+  Future<Null> _launched;
+
+  Future<Null> _launchInBrowser(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url, forceSafariVC: false, forceWebView: false);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  setState(() {
+  _launched = _launchInBrowser(toLaunch);
+  }),
+
+  Widget build(BuildContext context) {
+    switch (widget.category) {
+      case eat:
+      case go:
+        {
+          _items = [
+            Catalog().searchListTile(gmapsIcon, gmaps),
+            Catalog().searchListDivider(),
+            Catalog().searchListTile(amapsIcon, amaps),
+            Catalog().searchListDivider(),
+            Catalog().searchListTile(chromeIcon, chrome),
+            Catalog().searchListDivider(),
+            Catalog().searchListTile(safariIcon, safari),
+            Catalog().searchListDivider(),
+          ];
+          String str = gmapsUrl + widget.name;
+          url = str.substring(0);
+        }
+        break;
+      case listen:
+      case watch:
+        {
+          _items = [
+            Catalog().searchListTile(youtubeIcon, youtube),
+            Catalog().searchListDivider(),
+            Catalog().searchListTile(chromeIcon, chrome),
+            Catalog().searchListDivider(),
+            Catalog().searchListTile(safariIcon, safari),
+            Catalog().searchListDivider(),
+          ];
+          String str = youtubeUrl + widget.name;
+          url = str;
+        }
+        break;
+    }
+    return Scaffold(
+      body: Stack(
+        children: <Widget>[
+          CupertinoPageScaffold(
+            child: CustomScrollView(
+              physics: NeverScrollableScrollPhysics(),
+              slivers: <Widget>[
+                CupertinoSliverNavigationBar(
+                  automaticallyImplyLeading: false,
+                  backgroundColor: Colors.white,
+                  largeTitle: Text(search),
+                ),
+                SliverSafeArea(
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate(
+                      _items,
+                    ),
+                  ),
+                  top: false,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            child: Text(
+              widget.name,
+              style: TextStyle(
+                color: CupertinoColors.inactiveGray,
+                fontSize: 17.0,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
+              ),
+            ),
+            padding: EdgeInsets.only(left: 16.0, top: 31.0),
+          ),
+        ],
+      ),
+      bottomNavigationBar: Catalog().bottomAppBar(title),
     );
   }
 }
