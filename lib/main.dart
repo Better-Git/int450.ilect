@@ -1,8 +1,8 @@
-import 'dart:async';
-import 'package:firebase_database/firebase_database.dart';
+import 'dart:async' show Future, StreamSubscription;
+import 'package:firebase_database/firebase_database.dart' show Event;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
 import 'package:ilect_app/catalog.dart';
 import 'package:ilect_app/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -48,16 +48,13 @@ class FeedbackPage extends StatelessWidget {
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.title}) : super(key: key);
-
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
   // how it looks.
-
   // This class is the configuration for the state. It holds the values (in this
   // case the title) provided by the parent (in this case the App widget) and
   // used by the build method of the State. Fields in a Widget subclass are
   // always marked "final".
-
   final String title;
 
   @override
@@ -162,7 +159,7 @@ class _HomePageState extends State<HomePage> {
 class _SecondPageState extends State<SecondPage> {
   List<CardData> _items;
   StreamSubscription<Event> _onObjectAddedSubscription;
-  String str = '';
+  String _str = '';
 
   @override
   void dispose() {
@@ -177,27 +174,27 @@ class _SecondPageState extends State<SecondPage> {
     switch (widget.category) {
       case eat:
         {
-          str = schema1;
+          _str = schema1;
         }
         break;
       case go:
         {
-          str = schema2;
+          _str = schema2;
         }
         break;
       case listen:
         {
-          str = schema3;
+          _str = schema3;
         }
         break;
       case watch:
         {
-          str = schema4;
+          _str = schema4;
         }
         break;
     }
     _onObjectAddedSubscription =
-        Provider().cardDataStreamSubscription(str).listen(onObjectAdded);
+        Provider().cardDataStreamSubscription(_str).listen(onObjectAdded);
   }
 
   void onObjectAdded(Event event) {
@@ -224,19 +221,18 @@ class _SecondPageState extends State<SecondPage> {
 class _ThirdPageState extends State<ThirdPage> {
   List<Widget> _items;
 
-  Future<Null> _launched;
-
-  Future<Null> _launchInBrowser(String url) async {
+  Future _launchBrowser() async {
+    List ls = [
+      youtubeUrl,
+      '%E0%B8%99%E0%B8%B4%E0%B8%97%E0%B8%B2%E0%B8%99'
+    ]; // %+UTF-8 URL Encoding
+    String url = ls.join();
     if (await canLaunch(url)) {
       await launch(url, forceSafariVC: false, forceWebView: false);
     } else {
       throw 'Could not launch $url';
     }
   }
-
-//  setState(() {
-//  _launched = _launchInBrowser(toLaunch);
-//  }),
 
   Widget build(BuildContext context) {
     switch (widget.category) {
@@ -253,8 +249,8 @@ class _ThirdPageState extends State<ThirdPage> {
             Catalog().searchListTile(safariIcon, safari),
             Catalog().searchListDivider(),
           ];
-          String str = gmapsUrl + widget.name;
-          url = str.substring(0);
+//          String str = gmapsUrl + widget.name;
+//          url = str.substring(0);
         }
         break;
       case listen:
@@ -265,11 +261,36 @@ class _ThirdPageState extends State<ThirdPage> {
             Catalog().searchListDivider(),
             Catalog().searchListTile(chromeIcon, chrome),
             Catalog().searchListDivider(),
-            Catalog().searchListTile(safariIcon, safari),
+//            Catalog().searchListTile(safariIcon, safari),
+            Material(
+              child: InkWell(
+                child: Column(
+                  children: <Widget>[
+                    Container(height: 7.0),
+                    ListTile(
+                      leading: Image.asset(safariIcon, scale: 3.5),
+                      title: Text(safari,
+                          style:
+                              TextStyle(fontSize: 20.0, letterSpacing: -1.0)),
+                      trailing: Icon(
+                        CupertinoIcons.forward,
+                        color: Color(0xFFC7C7CC),
+                        size: 31.0,
+                      ),
+                    ),
+                    Container(height: 7.0),
+                  ],
+                ),
+                onTap: () => setState(() {
+                      _launchBrowser();
+                    }),
+              ),
+              type: MaterialType.transparency,
+            ),
             Catalog().searchListDivider(),
           ];
-          String str = youtubeUrl + widget.name;
-          url = str;
+//          String str = youtubeUrl + widget.name;
+//          url = str;
         }
         break;
     }
@@ -297,14 +318,18 @@ class _ThirdPageState extends State<ThirdPage> {
             ),
           ),
           Container(
-            child: Text(
-              widget.name,
-              style: TextStyle(
-                color: CupertinoColors.inactiveGray,
-                fontSize: 17.0,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.4,
-              ),
+            child: Row(
+              children: <Widget>[
+                Text(
+                  widget.name
+                      .substring(0, widget.name.lastIndexOf(pattern) + 1),
+                  style: Catalog().textStyleSubtitleNonIOS(),
+                ),
+                Text(
+                  widget.name.substring(widget.name.lastIndexOf(pattern) + 1),
+                  style: Catalog().textStyleSubtitle(),
+                )
+              ],
             ),
             padding: EdgeInsets.only(left: 16.0, top: 31.0),
           ),

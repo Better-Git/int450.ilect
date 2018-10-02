@@ -1,6 +1,8 @@
-import 'dart:async';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:ilect_app/main.dart';
+import 'dart:async' show Stream;
+import 'package:firebase_database/firebase_database.dart'
+    show DataSnapshot, Event, FirebaseDatabase;
+import 'package:ilect_app/main.dart'
+    show FeedbackPage, PPPage, SecondPage, ThirdPage, ToSPage;
 
 const String
     // Category titles
@@ -19,6 +21,7 @@ const String
     gmaps = 'Google Maps',
     safari = 'Safari',
     youtube = 'YouTube';
+final Pattern pattern = new RegExp(r'[\w\s][^ก-๙]');
 final String
     // Application title
     title = 'iLect',
@@ -84,7 +87,7 @@ class CardData {
 
 class Provider {
   dataPass(String str1, [String str2]) {
-    return (str2 == null || str2.isEmpty)
+    return (str2 == null || str2.trim().isEmpty)
         ? SecondPage(category: str1)
         : ThirdPage(name: str1, category: str2);
   }

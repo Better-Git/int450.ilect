@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' show Platform;
 import 'package:cache_image/cache_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,13 +6,55 @@ import 'package:ilect_app/provider.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-String temp = '';
+String _temp = '';
 
 class Catalog {
+  final String _font = 'EucrosiaUPC';
+  TextStyle _style;
+
+  TextStyle textStyleBottomAppBar(BuildContext context, String str) {
+    (str != title && Platform.isIOS)
+        ? _style = TextStyle(fontFamily: _font, fontSize: 30.0, height: 1.5)
+        : _style = Theme.of(context).textTheme.title;
+    return _style;
+  }
+
+  TextStyle textStyleCard([bool b]) {
+    (!Platform.isIOS)
+        ? _style = TextStyle(fontSize: 30.0)
+        : (b)
+            ? _style = TextStyle(
+                fontFamily: _font, fontSize: 40.0, height: 1.2) // _CategoryCard
+            : _style = TextStyle(
+                fontFamily: _font,
+                fontSize: 44.25,
+                height: 1.55); // _ObjectCard
+    return _style;
+  }
+
+  TextStyle textStyleSubtitle() {
+    (!Platform.isIOS)
+        ? textStyleSubtitleNonIOS()
+        : _style = TextStyle(
+            color: CupertinoColors.inactiveGray,
+            fontFamily: _font,
+            fontSize: 26.0,
+            fontWeight: FontWeight.bold,
+            height: 1.45);
+    return _style;
+  }
+
+  TextStyle textStyleSubtitleNonIOS() {
+    return TextStyle(
+      color: CupertinoColors.inactiveGray,
+      fontSize: 17.0,
+      fontWeight: FontWeight.bold,
+      letterSpacing: 0.4,
+    );
+  }
+
   Widget bottomAppBar(String str1, [String str2]) {
-    if (str2 != null && str2.isNotEmpty) {
-      temp = str2;
-    }
+    if (str2 != null && str2.trim().isNotEmpty) _temp = str2;
     return _BottomAppBar(str1);
   }
 
@@ -29,11 +71,11 @@ class Catalog {
   }
 
   Widget searchListDivider() {
-    return _searchListDivider();
+    return _SearchListDivider();
   }
 
   Widget searchListTile(String icon, String title) {
-    return _searchListTile(icon, title);
+    return _SearchListTile(icon, title);
   }
 }
 
@@ -61,11 +103,9 @@ class _BottomAppBar extends StatelessWidget {
       default:
         {
           var _rightIcon;
-          if (Platform.isAndroid) {
-            _rightIcon = Icon(Icons.arrow_back);
-          } else if (Platform.isIOS) {
-            _rightIcon = Icon(Icons.arrow_back_ios);
-          }
+          (Platform.isIOS)
+              ? _rightIcon = Icon(Icons.arrow_back_ios)
+              : _rightIcon = Icon(Icons.arrow_back);
           _rightIconButton = IconButton(
             icon: _rightIcon,
             onPressed: () => Navigator.pop(context),
@@ -84,10 +124,8 @@ class _BottomAppBar extends StatelessWidget {
                     context: context,
                   ),
             ),
-            Text(
-              _input,
-              style: Theme.of(context).textTheme.title,
-            ),
+            Text(_input,
+                style: Catalog().textStyleBottomAppBar(context, _input)),
             _rightIconButton,
           ],
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -175,12 +213,11 @@ class _CategoryCard extends StatelessWidget {
               child: Column(
                 children: <Widget>[
                   Expanded(
-                    child: CacheImage.firebase(path: _items[_index].pic),
-                  ),
+                      child: CacheImage.firebase(path: _items[_index].pic)),
                   Padding(
                     child: Text(
                       _items[_index].name,
-                      style: TextStyle(fontSize: 30.0),
+                      style: Catalog().textStyleCard(true),
                     ),
                     padding: EdgeInsets.only(bottom: 11.0, top: 11.0),
                   ),
@@ -209,13 +246,17 @@ class _ObjectCard extends StatelessWidget {
   final String _prot = 'https';
   int _index = 0;
   List<CardData> _items;
-  Widget child;
+  String _text;
+  Widget _pic;
 
   @override
   Widget build(BuildContext context) {
     (_items[_index].pic.substring(0, 5) == _prot)
-        ? child = Image.network(_items[_index].pic)
-        : child = CacheImage.firebase(path: _items[_index].pic);
+        ? _pic = Image.network(_items[_index].pic)
+        : _pic = CacheImage.firebase(path: _items[_index].pic);
+    (_items[_index].name == null || _items[_index].name.trim().isEmpty)
+        ? _text = _items[_index].search
+        : _text = _items[_index].name;
     return Card(
       child: Stack(
         children: <Widget>[
@@ -223,16 +264,20 @@ class _ObjectCard extends StatelessWidget {
             child: Column(
               children: <Widget>[
                 Padding(
-                  child: child,
+                  child: _pic,
                   padding: EdgeInsets.only(
                       bottom: 5.0, left: 16.0, right: 16.0, top: 18.0),
                 ),
                 Row(
                   children: <Widget>[
                     Text(
-                      _items[_index].name,
+                      _text.substring(0, _text.lastIndexOf(pattern) + 1),
                       style: TextStyle(fontSize: 30.0),
                     ),
+                    Text(
+                      _text.substring(_text.lastIndexOf(pattern) + 1),
+                      style: Catalog().textStyleCard(false),
+                    )
                   ],
                   mainAxisAlignment: MainAxisAlignment.center,
                 ),
@@ -240,7 +285,7 @@ class _ObjectCard extends StatelessWidget {
             ),
             padding: EdgeInsets.all(13.0),
           ),
-          _RippleCardEffect(_items[_index].name, temp),
+          _RippleCardEffect(_text, _temp),
         ],
       ),
       elevation: 0.5,
@@ -266,11 +311,9 @@ class _RippleCardEffect extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.all(Radius.circular(40.0)),
           onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        Provider().dataPass(_input1, _input2)),
-              ),
+              context,
+              MaterialPageRoute(
+                  builder: (context) => Provider().dataPass(_input1, _input2))),
           splashColor: Color.fromARGB(30, 100, 100, 100),
         ),
         color: Colors.transparent,
@@ -279,7 +322,7 @@ class _RippleCardEffect extends StatelessWidget {
   }
 }
 
-class _searchListDivider extends StatelessWidget {
+class _SearchListDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -289,13 +332,13 @@ class _searchListDivider extends StatelessWidget {
   }
 }
 
-class _searchListTile extends StatelessWidget {
-  _searchListTile(String icon, String title)
+class _SearchListTile extends StatelessWidget {
+  _SearchListTile(String icon, String title)
       : _asset = icon,
         _input = title;
 
   String _asset = '', _input = '';
-  var onTap;
+  var _onTap;
 
   void _handleTap() async {
     switch (_input) {
@@ -305,11 +348,11 @@ class _searchListTile extends StatelessWidget {
       case chrome:
       case safari:
         {
-          if (await canLaunch(url)) {
-            await launch(url);
-          } else {
-            throw 'Error: Could not launch $url';
-          }
+//          if (await canLaunch(url)) {
+//            await launch(url);
+//          } else {
+//            throw 'Error: Could not launch $url';
+//          }
         }
         break;
       case gmaps:
@@ -330,10 +373,8 @@ class _searchListTile extends StatelessWidget {
             Container(height: 7.0),
             ListTile(
               leading: Image.asset(_asset, scale: 3.5),
-              title: Text(
-                _input,
-                style: TextStyle(fontSize: 20.0, letterSpacing: -1.0),
-              ),
+              title: Text(_input,
+                  style: TextStyle(fontSize: 20.0, letterSpacing: -1.0)),
               trailing: Icon(
                 CupertinoIcons.forward,
                 color: Color(0xFFC7C7CC),
