@@ -206,11 +206,16 @@ class _ObjectCard extends StatelessWidget {
       : _index = i,
         _items = list;
 
+  final String _prot = 'https';
   int _index = 0;
   List<CardData> _items;
+  Widget child;
 
   @override
   Widget build(BuildContext context) {
+    (_items[_index].pic.substring(0, 5) == _prot)
+        ? child = Image.network(_items[_index].pic)
+        : child = CacheImage.firebase(path: _items[_index].pic);
     return Card(
       child: Stack(
         children: <Widget>[
@@ -218,7 +223,7 @@ class _ObjectCard extends StatelessWidget {
             child: Column(
               children: <Widget>[
                 Padding(
-                  child: CacheImage.firebase(path: _items[_index].pic),
+                  child: child,
                   padding: EdgeInsets.only(
                       bottom: 5.0, left: 16.0, right: 16.0, top: 18.0),
                 ),
@@ -285,7 +290,7 @@ class _searchListDivider extends StatelessWidget {
 }
 
 class _searchListTile extends StatelessWidget {
-  _searchListTile(String icon, String title, onTap)
+  _searchListTile(String icon, String title)
       : _asset = icon,
         _input = title;
 

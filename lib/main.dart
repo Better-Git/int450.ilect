@@ -132,7 +132,7 @@ class _HomePageState extends State<HomePage> {
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-      _items.add(CardData.fromSnapshot(false, event.snapshot));
+      _items.add(CardData.fromSnapshot(event.snapshot));
     });
   }
 
@@ -177,22 +177,22 @@ class _SecondPageState extends State<SecondPage> {
     switch (widget.category) {
       case eat:
         {
-          str = schema3;
+          str = schema1;
         }
         break;
       case go:
         {
-          str = schema4;
+          str = schema2;
         }
         break;
       case listen:
         {
-          str = schema2;
+          str = schema3;
         }
         break;
       case watch:
         {
-          str = schema1;
+          str = schema4;
         }
         break;
     }
@@ -202,7 +202,7 @@ class _SecondPageState extends State<SecondPage> {
 
   void onObjectAdded(Event event) {
     setState(() {
-      _items.add(CardData.fromSnapshot(true, event.snapshot));
+      _items.add(CardData.fromSnapshot(event.snapshot));
     });
   }
 
@@ -234,9 +234,9 @@ class _ThirdPageState extends State<ThirdPage> {
     }
   }
 
-  setState(() {
-  _launched = _launchInBrowser(toLaunch);
-  }),
+//  setState(() {
+//  _launched = _launchInBrowser(toLaunch);
+//  }),
 
   Widget build(BuildContext context) {
     switch (widget.category) {

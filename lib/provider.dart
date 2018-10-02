@@ -4,7 +4,7 @@ import 'package:ilect_app/main.dart';
 
 const String
     // Category titles
-    eat = 'หิว',
+    eat = 'กิน',
     go = 'ไป',
     listen = 'ฟัง',
     watch = 'ดู',
@@ -47,45 +47,38 @@ final String
 
     // Firebase database schema titles
     schema0 = 'category',
-    schema1 = 'looking',
-    schema2 = 'listen',
-    schema3 = 'Hungry',
-    schema4 = 'go';
+    schema1 = 'eat',
+    schema2 = 'go',
+    schema3 = 'listen',
+    schema4 = 'watch';
 final page01 = FeedbackPage(), page02 = ToSPage(), page03 = PPPage();
 String url = '';
 
 class CardData {
-  CardData(this._id, this._name, this._pic);
+  CardData(this._id, this._name, this._pic, this._search);
 
   String _id;
   String _name;
   String _pic;
+  String _search;
 
   String get id => _id;
   String get name => _name;
   String get pic => _pic;
+  String get search => _search;
 
-  CardData.fromSnapshot(bool b, DataSnapshot snapshot) {
+  CardData.fromSnapshot(DataSnapshot snapshot) {
     _id = snapshot.key;
+    _name = snapshot.value['name'];
     _pic = snapshot.value['pic'];
-    switch (b) {
-      case true:
-        {
-          _name = snapshot.value['search'];
-        }
-        break;
-      default:
-        {
-          _name = snapshot.value['name'];
-        }
-        break;
-    }
+    _search = snapshot.value['search'];
   }
 
   CardData.map(dynamic obj) {
     this._id = obj['id'];
     this._name = obj['name'];
     this._pic = obj['pic'];
+    this._search = obj['search'];
   }
 }
 
