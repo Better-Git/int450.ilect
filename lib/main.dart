@@ -1,13 +1,12 @@
-import 'dart:async' show Future, StreamSubscription;
+import 'dart:async' show StreamSubscription;
 import 'package:firebase_database/firebase_database.dart' show Event;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
 import 'package:ilect_app/catalog.dart';
 import 'package:ilect_app/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-void main() => runApp(new ILectApp());
+void main() => runApp(ILectApp());
 
 class ILectApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -20,10 +19,10 @@ class ILectApp extends StatelessWidget {
       ),
     );
     return MaterialApp(
-      home: HomePage(title: title),
+      home: HomePage(title: ConstantData().title),
       // This is the theme of your application.
       theme: ThemeData(primaryColor: Colors.white),
-      title: title,
+      title: ConstantData().title,
     );
   }
 }
@@ -39,7 +38,7 @@ class FeedbackPage extends StatelessWidget {
             onPressed: () {},
           ),
         ],
-        title: Text(feedback.substring(5)),
+        title: Text(ConstantData().feedback.substring(5)),
       ),
       body: Center(),
     );
@@ -66,7 +65,7 @@ class PPPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(pp),
+        title: Text(ConstantData().pp),
       ),
       body: Center(),
     );
@@ -97,7 +96,7 @@ class ToSPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(tos),
+        title: Text(ConstantData().tos),
       ),
       body: Center(),
     );
@@ -105,8 +104,8 @@ class ToSPage extends StatelessWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<CardData> _items;
   StreamSubscription<Event> _onCategoryAddedSubscription;
+  var _items = List<CardData>();
 
   @override
   void dispose() {
@@ -117,9 +116,9 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _items = List();
-    _onCategoryAddedSubscription =
-        Provider().cardDataStreamSubscription(schema0).listen(onCategoryAdded);
+    _onCategoryAddedSubscription = Provider()
+        .cardDataStreamSubscription(ConstantData().schema0)
+        .listen(onCategoryAdded);
   }
 
   void onCategoryAdded(Event event) {
@@ -157,9 +156,8 @@ class _HomePageState extends State<HomePage> {
 }
 
 class _SecondPageState extends State<SecondPage> {
-  List<CardData> _items;
   StreamSubscription<Event> _onObjectAddedSubscription;
-  String _str = '';
+  var _items = List<CardData>();
 
   @override
   void dispose() {
@@ -170,31 +168,9 @@ class _SecondPageState extends State<SecondPage> {
   @override
   void initState() {
     super.initState();
-    _items = List();
-    switch (widget.category) {
-      case eat:
-        {
-          _str = schema1;
-        }
-        break;
-      case go:
-        {
-          _str = schema2;
-        }
-        break;
-      case listen:
-        {
-          _str = schema3;
-        }
-        break;
-      case watch:
-        {
-          _str = schema4;
-        }
-        break;
-    }
-    _onObjectAddedSubscription =
-        Provider().cardDataStreamSubscription(_str).listen(onObjectAdded);
+    _onObjectAddedSubscription = Provider()
+        .cardDataStreamSubscription(Provider().selectSchema(widget.category))
+        .listen(onObjectAdded);
   }
 
   void onObjectAdded(Event event) {
@@ -219,81 +195,8 @@ class _SecondPageState extends State<SecondPage> {
 }
 
 class _ThirdPageState extends State<ThirdPage> {
-  List<Widget> _items;
-
-  Future _launchBrowser() async {
-    List ls = [
-      youtubeUrl,
-      '%E0%B8%99%E0%B8%B4%E0%B8%97%E0%B8%B2%E0%B8%99'
-    ]; // %+UTF-8 URL Encoding
-    String url = ls.join();
-    if (await canLaunch(url)) {
-      await launch(url, forceSafariVC: false, forceWebView: false);
-    } else {
-      throw 'Could not launch $url';
-    }
-  }
-
+  @override
   Widget build(BuildContext context) {
-    switch (widget.category) {
-      case eat:
-      case go:
-        {
-          _items = [
-            Catalog().searchListTile(gmapsIcon, gmaps),
-            Catalog().searchListDivider(),
-            Catalog().searchListTile(amapsIcon, amaps),
-            Catalog().searchListDivider(),
-            Catalog().searchListTile(chromeIcon, chrome),
-            Catalog().searchListDivider(),
-            Catalog().searchListTile(safariIcon, safari),
-            Catalog().searchListDivider(),
-          ];
-//          String str = gmapsUrl + widget.name;
-//          url = str.substring(0);
-        }
-        break;
-      case listen:
-      case watch:
-        {
-          _items = [
-            Catalog().searchListTile(youtubeIcon, youtube),
-            Catalog().searchListDivider(),
-            Catalog().searchListTile(chromeIcon, chrome),
-            Catalog().searchListDivider(),
-//            Catalog().searchListTile(safariIcon, safari),
-            Material(
-              child: InkWell(
-                child: Column(
-                  children: <Widget>[
-                    Container(height: 7.0),
-                    ListTile(
-                      leading: Image.asset(safariIcon, scale: 3.5),
-                      title: Text(safari,
-                          style:
-                              TextStyle(fontSize: 20.0, letterSpacing: -1.0)),
-                      trailing: Icon(
-                        CupertinoIcons.forward,
-                        color: Color(0xFFC7C7CC),
-                        size: 31.0,
-                      ),
-                    ),
-                    Container(height: 7.0),
-                  ],
-                ),
-                onTap: () => setState(() {
-                      _launchBrowser();
-                    }),
-              ),
-              type: MaterialType.transparency,
-            ),
-            Catalog().searchListDivider(),
-          ];
-//          String str = youtubeUrl + widget.name;
-//          url = str;
-        }
-        break;
-    }
     return Scaffold(
       body: Stack(
         children: <Widget>[
@@ -304,12 +207,12 @@ class _ThirdPageState extends State<ThirdPage> {
                 CupertinoSliverNavigationBar(
                   automaticallyImplyLeading: false,
                   backgroundColor: Colors.white,
-                  largeTitle: Text(search),
+                  largeTitle: Text(ConstantData().search),
                 ),
                 SliverSafeArea(
                   sliver: SliverList(
                     delegate: SliverChildListDelegate(
-                      _items,
+                      Catalog().searchList(widget.category),
                     ),
                   ),
                   top: false,
@@ -321,12 +224,13 @@ class _ThirdPageState extends State<ThirdPage> {
             child: Row(
               children: <Widget>[
                 Text(
-                  widget.name
-                      .substring(0, widget.name.lastIndexOf(pattern) + 1),
+                  widget.name.substring(
+                      0, widget.name.lastIndexOf(ConstantData().pattern) + 1),
                   style: Catalog().textStyleSubtitleNonIOS(),
                 ),
                 Text(
-                  widget.name.substring(widget.name.lastIndexOf(pattern) + 1),
+                  widget.name.substring(
+                      widget.name.lastIndexOf(ConstantData().pattern) + 1),
                   style: Catalog().textStyleSubtitle(),
                 )
               ],
@@ -335,7 +239,7 @@ class _ThirdPageState extends State<ThirdPage> {
           ),
         ],
       ),
-      bottomNavigationBar: Catalog().bottomAppBar(title),
+      bottomNavigationBar: Catalog().bottomAppBar(ConstantData().title),
     );
   }
 }

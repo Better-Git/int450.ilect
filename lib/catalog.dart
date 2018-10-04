@@ -6,15 +6,61 @@ import 'package:ilect_app/provider.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-String _temp = '';
+String _query, _temp;
 
 class Catalog {
-  final String _font = 'EucrosiaUPC';
   TextStyle _style;
 
+  List<Widget> searchList(String str) {
+    List<Widget> _items;
+    switch (str) {
+      case ConstantData.eat:
+      case ConstantData.go:
+        {
+          (Platform.isIOS)
+              ? _items = [
+                  _SearchListTile(ConstantData().gmapsIcon, ConstantData.gmaps),
+                  _SearchListTile(ConstantData().amapsIcon, ConstantData.amaps),
+                  _SearchListTile(
+                      ConstantData().chromeIcon, ConstantData.chrome),
+                  _SearchListTile(
+                      ConstantData().safariIcon, ConstantData.safari),
+                ]
+              : _items = [
+                  _SearchListTile(ConstantData().gmapsIcon, ConstantData.gmaps),
+                  _SearchListTile(
+                      ConstantData().chromeIcon, ConstantData.chrome),
+                ];
+        }
+        break;
+      case ConstantData.listen:
+      case ConstantData.watch:
+        {
+          (Platform.isIOS)
+              ? _items = [
+                  _SearchListTile(
+                      ConstantData().youtubeIcon, ConstantData.youtube),
+                  _SearchListTile(
+                      ConstantData().chromeIcon, ConstantData.chrome),
+                  _SearchListTile(
+                      ConstantData().safariIcon, ConstantData.safari),
+                ]
+              : _items = [
+                  _SearchListTile(
+                      ConstantData().youtubeIcon, ConstantData.youtube),
+                  _SearchListTile(
+                      ConstantData().chromeIcon, ConstantData.chrome),
+                ];
+        }
+        break;
+    }
+    return _items;
+  }
+
   TextStyle textStyleBottomAppBar(BuildContext context, String str) {
-    (str != title && Platform.isIOS)
-        ? _style = TextStyle(fontFamily: _font, fontSize: 30.0, height: 1.5)
+    (str != ConstantData().title && Platform.isIOS)
+        ? _style = TextStyle(
+            fontFamily: ConstantData().font, fontSize: 30.0, height: 1.5)
         : _style = Theme.of(context).textTheme.title;
     return _style;
   }
@@ -24,9 +70,11 @@ class Catalog {
         ? _style = TextStyle(fontSize: 30.0)
         : (b)
             ? _style = TextStyle(
-                fontFamily: _font, fontSize: 40.0, height: 1.2) // _CategoryCard
+                fontFamily: ConstantData().font,
+                fontSize: 40.0,
+                height: 1.2) // _CategoryCard
             : _style = TextStyle(
-                fontFamily: _font,
+                fontFamily: ConstantData().font,
                 fontSize: 44.25,
                 height: 1.55); // _ObjectCard
     return _style;
@@ -37,7 +85,7 @@ class Catalog {
         ? textStyleSubtitleNonIOS()
         : _style = TextStyle(
             color: CupertinoColors.inactiveGray,
-            fontFamily: _font,
+            fontFamily: ConstantData().font,
             fontSize: 26.0,
             fontWeight: FontWeight.bold,
             height: 1.45);
@@ -69,14 +117,6 @@ class Catalog {
   Widget objectCard(int i, List list) {
     return _ObjectCard(i, list);
   }
-
-  Widget searchListDivider() {
-    return _SearchListDivider();
-  }
-
-  Widget searchListTile(String icon, String title) {
-    return _SearchListTile(icon, title);
-  }
 }
 
 class _BottomAppBar extends StatelessWidget {
@@ -85,8 +125,8 @@ class _BottomAppBar extends StatelessWidget {
       : _bool = b,
         _input = str;
 
-  bool _bool = false;
-  String _input = '';
+  bool _bool;
+  String _input;
   var _rightIconButton;
 
   @override
@@ -96,7 +136,7 @@ class _BottomAppBar extends StatelessWidget {
         {
           _rightIconButton = IconButton(
             icon: Icon(Icons.share),
-            onPressed: () => Share.share(share),
+            onPressed: () => Share.share(ConstantData().share),
           );
         }
         break;
@@ -156,9 +196,9 @@ class _BottomDrawer extends StatelessWidget {
 //        ),
 //        Divider(height: 1.0),
         ListTile(
-          onTap: () => Navigator.push(
-              context, MaterialPageRoute(builder: (context) => page01)),
-          title: Text(feedback),
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (context) => ConstantData().page01)),
+          title: Text(ConstantData().feedback),
         ),
         Divider(height: 1.0),
         AboutListTile(
@@ -167,15 +207,19 @@ class _BottomDrawer extends StatelessWidget {
               child: Column(
                 children: <Widget>[
                   FlatButton(
-                    child: Text(tos),
-                    onPressed: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => page02)),
+                    child: Text(ConstantData().tos),
+                    onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ConstantData().page02)),
                     textColor: Colors.black87,
                   ),
                   FlatButton(
-                    child: Text(pp),
-                    onPressed: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => page03)),
+                    child: Text(ConstantData().pp),
+                    onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ConstantData().page03)),
                     textColor: Colors.black87,
                   ),
                 ],
@@ -183,10 +227,10 @@ class _BottomDrawer extends StatelessWidget {
               padding: EdgeInsets.only(top: 40.0),
             ),
           ],
-          applicationIcon: Image.asset(ilectIcon, scale: 6.5),
-          applicationLegalese: copyright,
-          applicationName: title,
-          applicationVersion: version,
+          applicationIcon: Image.asset(ConstantData().ilectIcon, scale: 6.5),
+          applicationLegalese: ConstantData().copyright,
+          applicationName: ConstantData().title,
+          applicationVersion: ConstantData().version,
           icon: Icon(Icons.info_outline),
         ),
       ],
@@ -200,7 +244,7 @@ class _CategoryCard extends StatelessWidget {
       : _index = i,
         _items = list;
 
-  int _index = 0;
+  int _index;
   List<CardData> _items;
 
   @override
@@ -244,7 +288,7 @@ class _ObjectCard extends StatelessWidget {
         _items = list;
 
   final String _prot = 'https';
-  int _index = 0;
+  int _index;
   List<CardData> _items;
   String _text;
   Widget _pic;
@@ -266,16 +310,18 @@ class _ObjectCard extends StatelessWidget {
                 Padding(
                   child: _pic,
                   padding: EdgeInsets.only(
-                      bottom: 5.0, left: 16.0, right: 16.0, top: 18.0),
+                      bottom: 15.0, left: 16.0, right: 16.0, top: 18.0),
                 ),
                 Row(
                   children: <Widget>[
                     Text(
-                      _text.substring(0, _text.lastIndexOf(pattern) + 1),
+                      _text.substring(
+                          0, _text.lastIndexOf(ConstantData().pattern) + 1),
                       style: TextStyle(fontSize: 30.0),
                     ),
                     Text(
-                      _text.substring(_text.lastIndexOf(pattern) + 1),
+                      _text.substring(
+                          _text.lastIndexOf(ConstantData().pattern) + 1),
                       style: Catalog().textStyleCard(false),
                     )
                   ],
@@ -283,7 +329,7 @@ class _ObjectCard extends StatelessWidget {
                 ),
               ],
             ),
-            padding: EdgeInsets.all(13.0),
+            padding: EdgeInsets.all(15.0),
           ),
           _RippleCardEffect(_text, _temp),
         ],
@@ -302,7 +348,7 @@ class _RippleCardEffect extends StatelessWidget {
       : _input1 = str1,
         _input2 = str2;
 
-  String _input1 = '', _input2 = '';
+  String _input1, _input2;
 
   @override
   Widget build(BuildContext context) {
@@ -310,24 +356,18 @@ class _RippleCardEffect extends StatelessWidget {
       child: Material(
         child: InkWell(
           borderRadius: BorderRadius.all(Radius.circular(40.0)),
-          onTap: () => Navigator.push(
+          onTap: () {
+            _query = _input1;
+            Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => Provider().dataPass(_input1, _input2))),
+                  builder: (context) => Provider().dataPass(_input1, _input2)),
+            );
+          },
           splashColor: Color.fromARGB(30, 100, 100, 100),
         ),
         color: Colors.transparent,
       ),
-    );
-  }
-}
-
-class _SearchListDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      child: Divider(color: Color(0xFFBCBBC1), height: 1.0),
-      padding: EdgeInsets.only(left: 90.0),
     );
   }
 }
@@ -337,56 +377,112 @@ class _SearchListTile extends StatelessWidget {
       : _asset = icon,
         _input = title;
 
-  String _asset = '', _input = '';
-  var _onTap;
+  String _asset, _input;
 
-  void _handleTap() async {
-    switch (_input) {
-      case amaps:
-        {}
+  void _handleTap() {
+    switch (_temp) {
+      case ConstantData.eat:
+      case ConstantData.go:
+        _launchApp(ConstantData().gmapsUrl);
         break;
-      case chrome:
-      case safari:
-        {
-//          if (await canLaunch(url)) {
-//            await launch(url);
-//          } else {
-//            throw 'Error: Could not launch $url';
-//          }
-        }
+      case ConstantData.listen:
+      case ConstantData.watch:
+        _launchApp(ConstantData().youtubeUrl);
         break;
-      case gmaps:
-        {}
-        break;
-      case youtube:
-        {}
-        break;
+    }
+  }
+
+  void _launchApp(String str) async {
+    String _path, _url;
+    if (Platform.isIOS) {
+      _path = Uri.encodeFull(_query);
+      switch (_input) {
+        case ConstantData.amaps:
+          str = ConstantData().amapsUrl;
+          break;
+        case ConstantData.gmaps:
+          {
+            if (await canLaunch(ConstantData().gmapsApp)) {
+              str = ConstantData().gmapsApp;
+            } else {
+              throw 'Error: ${ConstantData.gmaps} hasn\'t been installed on this device yet.';
+            }
+          }
+          break;
+        case ConstantData.chrome:
+          {
+            if (await canLaunch(ConstantData().chromeApp)) {
+              str = ConstantData().chromeApp;
+            } else {
+              throw 'Error: Google ${ConstantData.chrome} hasn\'t been installed on this device yet.';
+            }
+          }
+          break;
+        case ConstantData.safari:
+          break;
+        case ConstantData.youtube:
+          {
+            if (await canLaunch(ConstantData().youtubeApp)) {
+              str = ConstantData().youtubeApp;
+            } else {
+              throw 'Error: ${ConstantData.youtube} hasn\'t been installed on this device yet.';
+            }
+          }
+          break;
+      }
+    } else {
+      switch (_input) {
+        case ConstantData.gmaps:
+          {}
+          break;
+        case ConstantData.chrome:
+          {}
+          break;
+        case ConstantData.youtube:
+          {}
+          break;
+      }
+      _path = _query;
+    }
+    _url = str + _path;
+    if (await canLaunch(_url)) {
+      await launch(_url, forceSafariVC: false, forceWebView: false);
+    } else {
+      throw 'Error: Could not launch $_url';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: InkWell(
-        child: Column(
-          children: <Widget>[
-            Container(height: 7.0),
-            ListTile(
-              leading: Image.asset(_asset, scale: 3.5),
-              title: Text(_input,
-                  style: TextStyle(fontSize: 20.0, letterSpacing: -1.0)),
-              trailing: Icon(
-                CupertinoIcons.forward,
-                color: Color(0xFFC7C7CC),
-                size: 31.0,
-              ),
+    return Column(
+      children: <Widget>[
+        Material(
+          child: InkWell(
+            child: Column(
+              children: <Widget>[
+                Container(height: 7.0),
+                ListTile(
+                  leading: Image.asset(_asset, scale: 3.5),
+                  title: Text(_input,
+                      style: TextStyle(fontSize: 20.0, letterSpacing: -1.0)),
+                  trailing: Icon(
+                    CupertinoIcons.forward,
+                    color: Color(0xFFC7C7CC),
+                    size: 31.0,
+                  ),
+                ),
+                Container(height: 7.0),
+              ],
             ),
-            Container(height: 7.0),
-          ],
+            onTap: _handleTap,
+          ),
+          type: MaterialType.transparency,
         ),
-        onTap: _handleTap,
-      ),
-      type: MaterialType.transparency,
+        Padding(
+          child: Divider(color: Color(0xFFBCBBC1), height: 1.0),
+          padding: EdgeInsets.only(left: 90.0),
+        ),
+      ],
     );
   }
 }
