@@ -22,13 +22,13 @@ dependencies:
   cupertino_icons: ^0.1.2
 
   firebase_database: ^1.0.4
+  fluttertoast: ^2.0.8
   share: ^0.5.3
   url_launcher: ^4.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec

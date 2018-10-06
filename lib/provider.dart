@@ -5,13 +5,14 @@ import 'package:ilect_app/main.dart'
     show FeedbackPage, PPPage, SecondPage, ThirdPage, ToSPage;
 
 class CardData {
-  String id, name, pic, search;
+  String id, name, pic, search, token;
 
   CardData.fromSnapshot(DataSnapshot snapshot) {
     id = snapshot.key;
     name = snapshot.value['name'];
     pic = snapshot.value['pic'];
     search = snapshot.value['search'];
+    token = snapshot.value['token'];
   }
 }
 
@@ -41,12 +42,22 @@ class ConstantData {
       // Application title
       title = 'iLect',
 
+      // Custom URL schemes
+      chromeApp = 'googlechromes://',
+      gmapsApp = 'googlemaps://?q=',
+      youtubeApp = 'youtube:///results?q=',
+
       // External links
-      amapsUrl = 'http://maps.apple.com/?q=',
-      chromeApp = 'googlechrome://',
-      gmapsApp = 'googlemaps://',
-      gmapsUrl = 'https://www.google.co.th/maps/search/',
-      youtubeApp = 'youtube://',
+      amapsUrl = 'https://maps.apple.com/?q=',
+      chromeAppStoreUrl =
+          'https://itunes.apple.com/us/app/google-chrome/id535886823?mt=8',
+      firebaseUrl =
+          'https://firebasestorage.googleapis.com/v0/b/it58-20.appspot.com/o/',
+      gmapsAppStoreUrl =
+          'https://itunes.apple.com/us/app/google-maps-transit-food/id585027354?mt=8',
+      gmapsUrl = 'https://www.google.com/maps/search/',
+      youtubeAppStoreUrl =
+          'https://itunes.apple.com/us/app/youtube-watch-listen-stream/id544007664?mt=8',
       youtubeUrl = 'https://www.youtube.com/results?search_query=',
 
       // Firebase database schema titles
@@ -72,7 +83,7 @@ class ConstantData {
           '© 2018 School of Information Technology, KMUTT.\nAll rights reserved.',
       share =
           'ฉันได้ใช้แอป iLect แล้วนะ\nอยากจะให้เพื่อนๆมาลองใช้กัน\n\nดาวน์โหลดได้ที่ ...',
-      version = 'version 0.4',
+      version = 'version 0.5',
 
       // Page titles
       feedback = 'Send Feedback',
@@ -91,6 +102,17 @@ class Provider {
 
   Stream<Event> cardDataStreamSubscription(String str) {
     return FirebaseDatabase.instance.reference().child(str).onChildAdded;
+  }
+
+  String createImageUrl(CardData cd, [String str]) {
+    final String _media = '?alt=media&token=',
+        _slash = '%2F',
+        _url = ConstantData().firebaseUrl;
+    String _dir;
+    (str == null || str.trim().isEmpty)
+        ? _dir = ConstantData().schema0
+        : _dir = selectSchema(str);
+    return [_url, _dir, _slash, cd.pic, _media, cd.token].join();
   }
 
   String selectSchema(String str) {

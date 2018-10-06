@@ -2,7 +2,8 @@ import 'dart:async' show StreamSubscription;
 import 'package:firebase_database/firebase_database.dart' show Event;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
+import 'package:flutter/services.dart'
+    show DeviceOrientation, SystemChrome, SystemUiOverlayStyle;
 import 'package:ilect_app/catalog.dart';
 import 'package:ilect_app/provider.dart';
 
@@ -12,6 +13,10 @@ class ILectApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle.dark.copyWith(
         statusBarColor: Colors.transparent,
@@ -220,22 +225,25 @@ class _ThirdPageState extends State<ThirdPage> {
               ],
             ),
           ),
-          Container(
-            child: Row(
-              children: <Widget>[
-                Text(
-                  widget.name.substring(
-                      0, widget.name.lastIndexOf(ConstantData().pattern) + 1),
-                  style: Catalog().textStyleSubtitleNonIOS(),
-                ),
-                Text(
-                  widget.name.substring(
-                      widget.name.lastIndexOf(ConstantData().pattern) + 1),
-                  style: Catalog().textStyleSubtitle(),
-                )
-              ],
+          SafeArea(
+            child: Container(
+              child: Row(
+                children: <Widget>[
+                  Text(
+                    widget.name.substring(
+                        0, widget.name.lastIndexOf(ConstantData().pattern) + 1),
+                    style: Catalog().textStyleSubtitleNonIOS(),
+                  ),
+                  Text(
+                    widget.name.substring(
+                        widget.name.lastIndexOf(ConstantData().pattern) + 1),
+                    style: Catalog().textStyleSubtitle(),
+                  )
+                ],
+              ),
+              padding: EdgeInsets.only(left: 16.0),
             ),
-            padding: EdgeInsets.only(left: 16.0, top: 31.0),
+            top: true,
           ),
         ],
       ),

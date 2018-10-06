@@ -1,7 +1,9 @@
+import 'dart:async' show Timer;
 import 'dart:io' show Platform;
 import 'package:cache_image/cache_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ilect_app/provider.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,40 +19,22 @@ class Catalog {
       case ConstantData.eat:
       case ConstantData.go:
         {
-          (Platform.isIOS)
-              ? _items = [
-                  _SearchListTile(ConstantData().gmapsIcon, ConstantData.gmaps),
-                  _SearchListTile(ConstantData().amapsIcon, ConstantData.amaps),
-                  _SearchListTile(
-                      ConstantData().chromeIcon, ConstantData.chrome),
-                  _SearchListTile(
-                      ConstantData().safariIcon, ConstantData.safari),
-                ]
-              : _items = [
-                  _SearchListTile(ConstantData().gmapsIcon, ConstantData.gmaps),
-                  _SearchListTile(
-                      ConstantData().chromeIcon, ConstantData.chrome),
-                ];
+          _items = [
+            _SearchListTile(ConstantData().gmapsIcon, ConstantData.gmaps),
+            _SearchListTile(ConstantData().amapsIcon, ConstantData.amaps),
+            _SearchListTile(ConstantData().chromeIcon, ConstantData.chrome),
+            _SearchListTile(ConstantData().safariIcon, ConstantData.safari),
+          ];
         }
         break;
       case ConstantData.listen:
       case ConstantData.watch:
         {
-          (Platform.isIOS)
-              ? _items = [
-                  _SearchListTile(
-                      ConstantData().youtubeIcon, ConstantData.youtube),
-                  _SearchListTile(
-                      ConstantData().chromeIcon, ConstantData.chrome),
-                  _SearchListTile(
-                      ConstantData().safariIcon, ConstantData.safari),
-                ]
-              : _items = [
-                  _SearchListTile(
-                      ConstantData().youtubeIcon, ConstantData.youtube),
-                  _SearchListTile(
-                      ConstantData().chromeIcon, ConstantData.chrome),
-                ];
+          _items = [
+            _SearchListTile(ConstantData().youtubeIcon, ConstantData.youtube),
+            _SearchListTile(ConstantData().chromeIcon, ConstantData.chrome),
+            _SearchListTile(ConstantData().safariIcon, ConstantData.safari),
+          ];
         }
         break;
     }
@@ -60,7 +44,10 @@ class Catalog {
   TextStyle textStyleBottomAppBar(BuildContext context, String str) {
     (str != ConstantData().title && Platform.isIOS)
         ? _style = TextStyle(
-            fontFamily: ConstantData().font, fontSize: 30.0, height: 1.5)
+            fontFamily: ConstantData().font,
+            fontSize: 30.0,
+            height: 1.5,
+          )
         : _style = Theme.of(context).textTheme.title;
     return _style;
   }
@@ -72,11 +59,13 @@ class Catalog {
             ? _style = TextStyle(
                 fontFamily: ConstantData().font,
                 fontSize: 40.0,
-                height: 1.2) // _CategoryCard
+                height: 1.2,
+              ) // _CategoryCard
             : _style = TextStyle(
                 fontFamily: ConstantData().font,
                 fontSize: 44.25,
-                height: 1.55); // _ObjectCard
+                height: 1.55,
+              ); // _ObjectCard
     return _style;
   }
 
@@ -88,7 +77,8 @@ class Catalog {
             fontFamily: ConstantData().font,
             fontSize: 26.0,
             fontWeight: FontWeight.bold,
-            height: 1.45);
+            height: 1.45,
+          );
     return _style;
   }
 
@@ -120,17 +110,19 @@ class Catalog {
 }
 
 class _BottomAppBar extends StatelessWidget {
-  _BottomAppBar(String str) : _input = str;
+  _BottomAppBar(String str)
+      : _bool = false,
+        _input = str;
   _BottomAppBar.extended(bool b, String str)
       : _bool = b,
         _input = str;
 
-  bool _bool;
-  String _input;
-  var _rightIconButton;
+  final bool _bool;
+  final String _input;
 
   @override
   Widget build(BuildContext context) {
+    var _rightIconButton;
     switch (_bool) {
       case true:
         {
@@ -164,14 +156,17 @@ class _BottomAppBar extends StatelessWidget {
                     context: context,
                   ),
             ),
-            Text(_input,
-                style: Catalog().textStyleBottomAppBar(context, _input)),
+            Text(
+              _input,
+              style: Catalog().textStyleBottomAppBar(context, _input),
+            ),
             _rightIconButton,
           ],
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
         ),
         decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: Colors.blue, width: 2.0))),
+          border: Border(top: BorderSide(color: Colors.blue, width: 2.0)),
+        ),
       ),
     );
   }
@@ -244,8 +239,8 @@ class _CategoryCard extends StatelessWidget {
       : _index = i,
         _items = list;
 
-  int _index;
-  List<CardData> _items;
+  final int _index;
+  final List<CardData> _items;
 
   @override
   Widget build(BuildContext context) {
@@ -257,7 +252,10 @@ class _CategoryCard extends StatelessWidget {
               child: Column(
                 children: <Widget>[
                   Expanded(
-                      child: CacheImage.firebase(path: _items[_index].pic)),
+                    child: Image.network(
+                      Provider().createImageUrl(_items[_index]),
+                    ),
+                  ),
                   Padding(
                     child: Text(
                       _items[_index].name,
@@ -287,20 +285,20 @@ class _ObjectCard extends StatelessWidget {
       : _index = i,
         _items = list;
 
-  final String _prot = 'https';
-  int _index;
-  List<CardData> _items;
-  String _text;
-  Widget _pic;
+  final int _index;
+  final List<CardData> _items;
 
   @override
   Widget build(BuildContext context) {
-    (_items[_index].pic.substring(0, 5) == _prot)
-        ? _pic = Image.network(_items[_index].pic)
-        : _pic = CacheImage.firebase(path: _items[_index].pic);
+    String _text;
+    var _pic;
     (_items[_index].name == null || _items[_index].name.trim().isEmpty)
         ? _text = _items[_index].search
         : _text = _items[_index].name;
+    (_items[_index].pic.substring(0, 2) == 'gs')
+        ? _pic = CacheImage.firebase(path: _items[_index].pic)
+        : _pic =
+            Image.network(Provider().createImageUrl(_items[_index], _temp));
     return Card(
       child: Stack(
         children: <Widget>[
@@ -323,7 +321,7 @@ class _ObjectCard extends StatelessWidget {
                       _text.substring(
                           _text.lastIndexOf(ConstantData().pattern) + 1),
                       style: Catalog().textStyleCard(false),
-                    )
+                    ),
                   ],
                   mainAxisAlignment: MainAxisAlignment.center,
                 ),
@@ -331,7 +329,7 @@ class _ObjectCard extends StatelessWidget {
             ),
             padding: EdgeInsets.all(15.0),
           ),
-          _RippleCardEffect(_text, _temp),
+          _RippleCardEffect(_items[_index].search, _temp),
         ],
       ),
       elevation: 0.5,
@@ -348,7 +346,29 @@ class _RippleCardEffect extends StatelessWidget {
       : _input1 = str1,
         _input2 = str2;
 
-  String _input1, _input2;
+  final String _input1, _input2;
+
+  void _launchAppAndroid() async {
+    String _str = 'Open ', _url;
+    switch (_temp) {
+      case ConstantData.eat:
+      case ConstantData.go:
+        _str += ConstantData.gmaps;
+        _url = ConstantData().gmapsUrl + _query;
+        break;
+      case ConstantData.listen:
+      case ConstantData.watch:
+        _str += ConstantData.youtube;
+        _url = ConstantData().youtubeUrl + _query;
+        break;
+    }
+    Fluttertoast.showToast(msg: _str);
+    if (await canLaunch(_url)) {
+      await launch(_url);
+    } else {
+      throw 'Error: Could not launch $_url';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -358,11 +378,13 @@ class _RippleCardEffect extends StatelessWidget {
           borderRadius: BorderRadius.all(Radius.circular(40.0)),
           onTap: () {
             _query = _input1;
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => Provider().dataPass(_input1, _input2)),
-            );
+            (_input2 != null && _input2.trim().isNotEmpty && !Platform.isIOS)
+                ? _launchAppAndroid()
+                : Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            Provider().dataPass(_input1, _input2)));
           },
           splashColor: Color.fromARGB(30, 100, 100, 100),
         ),
@@ -372,84 +394,189 @@ class _RippleCardEffect extends StatelessWidget {
   }
 }
 
+class _SearchAlertDialog extends StatelessWidget {
+  _SearchAlertDialog(String str) : _input = str;
+
+  final String _input;
+
+  void _selectAppStoreUrl() async {
+    String _url;
+    switch (_input) {
+      case 'Google ' + ConstantData.chrome:
+        _url = ConstantData().chromeAppStoreUrl;
+        break;
+      case ConstantData.gmaps:
+        _url = ConstantData().gmapsAppStoreUrl;
+        break;
+      case ConstantData.youtube:
+        _url = ConstantData().youtubeAppStoreUrl;
+        break;
+    }
+    if (await canLaunch(_url)) {
+      await launch(_url);
+    } else {
+      throw 'Error: Could not launch $_url';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoAlertDialog(
+      title: Text('Get \“$_input\”?'),
+      content: Text('You followed a link that requires the app \“$_input\”, ' +
+          'which is no longer on your device. You can get it from the App Store.'),
+      actions: <Widget>[
+        Divider(color: Colors.black45, height: 0.5),
+        Stack(
+          children: <Widget>[
+            CupertinoDialogAction(
+              child: Text(
+                'Show in App Store',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              onPressed: () {},
+            ),
+            Positioned.fill(
+              child: Material(
+                child: InkWell(
+                  onTap: () {
+                    _selectAppStoreUrl();
+                    Navigator.pop(context);
+                  },
+                  splashColor: Colors.transparent,
+                ),
+                color: Colors.transparent,
+              ),
+            ),
+          ],
+        ),
+        Row(),
+        Divider(color: Colors.black45, height: 0.5),
+        Stack(
+          children: <Widget>[
+            CupertinoDialogAction(
+              child: Text(
+                'Cancel',
+                style: TextStyle(letterSpacing: -0.25),
+              ),
+              isDefaultAction: true,
+              onPressed: () {},
+            ),
+            Positioned.fill(
+              child: Material(
+                child: InkWell(
+                  onTap: () => Navigator.pop(context),
+                  splashColor: Colors.transparent,
+                ),
+                color: Colors.transparent,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class _SearchListTile extends StatelessWidget {
   _SearchListTile(String icon, String title)
       : _asset = icon,
         _input = title;
 
-  String _asset, _input;
+  final String _asset, _input;
 
-  void _handleTap() {
+  void _handleTap(BuildContext context) {
     switch (_temp) {
       case ConstantData.eat:
       case ConstantData.go:
-        _launchApp(ConstantData().gmapsUrl);
+        _launchAppIOS(context, ConstantData().gmapsUrl);
         break;
       case ConstantData.listen:
       case ConstantData.watch:
-        _launchApp(ConstantData().youtubeUrl);
+        _launchAppIOS(context, ConstantData().youtubeUrl);
         break;
     }
   }
 
-  void _launchApp(String str) async {
-    String _path, _url;
-    if (Platform.isIOS) {
-      _path = Uri.encodeFull(_query);
-      switch (_input) {
-        case ConstantData.amaps:
-          str = ConstantData().amapsUrl;
-          break;
-        case ConstantData.gmaps:
-          {
-            if (await canLaunch(ConstantData().gmapsApp)) {
-              str = ConstantData().gmapsApp;
-            } else {
-              throw 'Error: ${ConstantData.gmaps} hasn\'t been installed on this device yet.';
-            }
-          }
-          break;
-        case ConstantData.chrome:
-          {
-            if (await canLaunch(ConstantData().chromeApp)) {
-              str = ConstantData().chromeApp;
-            } else {
-              throw 'Error: Google ${ConstantData.chrome} hasn\'t been installed on this device yet.';
-            }
-          }
-          break;
-        case ConstantData.safari:
-          break;
-        case ConstantData.youtube:
-          {
-            if (await canLaunch(ConstantData().youtubeApp)) {
-              str = ConstantData().youtubeApp;
-            } else {
-              throw 'Error: ${ConstantData.youtube} hasn\'t been installed on this device yet.';
-            }
-          }
-          break;
-      }
-    } else {
-      switch (_input) {
-        case ConstantData.gmaps:
-          {}
-          break;
-        case ConstantData.chrome:
-          {}
-          break;
-        case ConstantData.youtube:
-          {}
-          break;
-      }
-      _path = _query;
+  void _launchAppIOS(BuildContext context, String str) async {
+    String _path = Uri.encodeFull(_query);
+    switch (_input) {
+      case ConstantData.amaps:
+        _launchUrl(ConstantData().amapsUrl + _path);
+        break;
+      case ConstantData.gmaps:
+        (await canLaunch(ConstantData().gmapsApp))
+            ? _launchUrl(ConstantData().gmapsApp + _path)
+            : showCupertinoDialog(
+                context: context,
+                builder: (BuildContext context) =>
+                    _SearchAlertDialog(ConstantData.gmaps));
+        break;
+      case ConstantData.chrome:
+        (await canLaunch(ConstantData().chromeApp))
+            ? _launchUrl(ConstantData().chromeApp + str.substring(8) + _path)
+            : showCupertinoDialog(
+                context: context,
+                builder: (BuildContext context) =>
+                    _SearchAlertDialog('Google ' + ConstantData.chrome));
+        break;
+      case ConstantData.safari:
+        if (await canLaunch(ConstantData().gmapsApp) &&
+            str == ConstantData().gmapsUrl) {
+          _showSnackBar(context, ConstantData.gmaps);
+          Timer(Duration(milliseconds: 1000), () => _launchUrl(str + _path));
+        } else if (await canLaunch(ConstantData().youtubeApp) &&
+            str == ConstantData().youtubeUrl) {
+          _showSnackBar(context, ConstantData.youtube);
+          Timer(Duration(milliseconds: 1000), () => _launchUrl(str + _path));
+        } else {
+          _launchUrl(str + _path);
+        }
+        break;
+      case ConstantData.youtube:
+        (await canLaunch(ConstantData().youtubeApp))
+            ? _launchUrl(ConstantData().youtubeApp + _path)
+            : showCupertinoDialog(
+                context: context,
+                builder: (BuildContext context) =>
+                    _SearchAlertDialog(ConstantData.youtube));
+        break;
     }
-    _url = str + _path;
-    if (await canLaunch(_url)) {
-      await launch(_url, forceSafariVC: false, forceWebView: false);
+  }
+
+  void _launchUrl(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url, forceSafariVC: false);
     } else {
-      throw 'Error: Could not launch $_url';
+      throw 'Error: Could not launch $url';
     }
+  }
+
+  void _showSnackBar(BuildContext context, String str) {
+    final _snackBar = SnackBar(
+      backgroundColor: Colors.white,
+      content: Row(
+        children: <Widget>[
+          Card(
+            child: Padding(
+              child: Text(
+                'Redirect to ' + str,
+                style: TextStyle(color: Colors.black),
+              ),
+              padding: EdgeInsets.all(15.0),
+            ),
+            color: Colors.white,
+            elevation: 0.5,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(38.0),
+              side: BorderSide(color: Colors.blue, width: 2.0),
+            ),
+          ),
+        ],
+        mainAxisAlignment: MainAxisAlignment.center,
+      ),
+    );
+    Scaffold.of(context).showSnackBar(_snackBar);
   }
 
   @override
@@ -463,8 +590,10 @@ class _SearchListTile extends StatelessWidget {
                 Container(height: 7.0),
                 ListTile(
                   leading: Image.asset(_asset, scale: 3.5),
-                  title: Text(_input,
-                      style: TextStyle(fontSize: 20.0, letterSpacing: -1.0)),
+                  title: Text(
+                    _input,
+                    style: TextStyle(fontSize: 20.0, letterSpacing: -1.0),
+                  ),
                   trailing: Icon(
                     CupertinoIcons.forward,
                     color: Color(0xFFC7C7CC),
@@ -474,7 +603,8 @@ class _SearchListTile extends StatelessWidget {
                 Container(height: 7.0),
               ],
             ),
-            onTap: _handleTap,
+            onTap: () => _handleTap(context),
+            splashColor: Colors.transparent,
           ),
           type: MaterialType.transparency,
         ),
