@@ -7,7 +7,7 @@ description: A new augmentative and alternative communication (AAC) application.
 # Both the version and the builder number may be overridden in flutter
 # build by specifying --build-name and --build-number, respectively.
 # Read more about versioning at semver.org.
-version: 1.0.0+1
+version: 0.5.0
 
 environment:
   sdk: ">=2.0.0-dev.68.0 <3.0.0"
@@ -15,14 +15,24 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cache_image: "^0.0.1"
+  flutter_localizations:
+    sdk: flutter
+  dynamic_theme:
+    git:
+      url: git://github.com/Norbert515/dynamic_theme.git
+
+  battery: ^0.2.3
+  connectivity: ^0.3.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
 
+  device_info: ^0.2.1
   firebase_database: ^1.0.4
   fluttertoast: ^2.0.8
+  image_picker: ^0.4.10
+  package_info: ^0.3.2
   share: ^0.5.3
   url_launcher: ^4.0.0
 

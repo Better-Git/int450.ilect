@@ -13,12 +13,12 @@ if (flutterRoot == null) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '1'
+    throw new GradleException("Flutter VersionCode not found. Define location with flutter.versionCode in the local.properties file.")
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '1.0'
+    throw new GradleException("Flutter VersionName not found. Define location with flutter.versionName in the local.properties file.")
 }
 
 apply plugin: 'com.android.application'
@@ -28,6 +28,7 @@ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
     compileSdkVersion 28
+    buildToolsVersion '28.0.3'
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -44,16 +45,60 @@ android {
         targetSdkVersion 28
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        ndk {
+            abiFilters "armeabi-v7a", "x86"
+        }
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
+//    signingConfigs {
+//        release {
+//            keyAlias keystoreProperties['keyAlias']
+//            keyPassword keystoreProperties['keyPassword']
+//            storeFile file(keystoreProperties['storeFile'])
+//            storePassword keystoreProperties['storePassword']
+//        }
+//    }
+
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+        debug {
             signingConfig signingConfigs.debug
         }
+        release {
+            // TODO: Add your own signing config for the release build.
+//            profile {
+//                matchingFallbacks = ['debug', 'release']
+//            }
+//            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            useProguard true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
     }
+
+    // For Traditional Multiple APKs
+//    splits {
+//        abi {
+//            enable true
+//            reset()
+//            include "armeabi-v7a", "x86"
+//            universalApk false
+//        }
+//    }
+
+    // For Android App Bundles
+//    bundle {
+//        language {
+//            enableSplit = false
+//        }
+//        density {
+//            enableSplit = true
+//        }
+//        abi {
+//            enableSplit = true
+//        }
+//    }
 }
 
 flutter {
@@ -61,6 +106,8 @@ flutter {
 }
 
 dependencies {
+    implementation 'com.google.firebase:firebase-core:16.0.4'
+    implementation 'com.google.firebase:firebase-database:16.0.3'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
