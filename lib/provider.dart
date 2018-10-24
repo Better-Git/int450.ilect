@@ -87,7 +87,7 @@ class ConstantData {
       safariIcon = 'assets/safari_icon.png',
       youtubeIcon = 'assets/youtube_icon.png',
 
-      // Other text spans
+      // Other textspans
       batteryState0 = 'Full',
       batteryState0TH = 'เต็ม',
       batteryState1 = 'Charging',
@@ -113,6 +113,10 @@ class ConstantData {
           'กรุณาเปิดไวไฟอีกครั้งหรือปิดโหมดเครื่องบิน',
       errorDialog5 = 'Please check your network settings and try again.',
       errorDialog5TH = 'โปรดตรวจสอบการตั้งค่าเครือข่ายและลองใหม่อีกครั้ง',
+      feedbackDialog0 = '',
+      feedbackDialog0TH = '',
+      feedbackDialog1 = 'Write your feedback before sending',
+      feedbackDialog1TH = 'โปรดเขียนความคิดเห็นก่อนส่ง',
       feedbackNote0 =
           'In addition to account info or screenshot whether or not you provide. Some ',
       feedbackNote0TH =
@@ -168,7 +172,7 @@ class ConstantData {
       sysinfo7TH = 'สถานะแบตเตอรี่',
       sysinfo8 = 'Language',
       sysinfo8TH = 'ภาษา',
-      version = '0.5',
+      version = '0.6',
 
       // Page titles
       feedback = 'Send Feedback',
@@ -187,8 +191,7 @@ class LocalizationData {
   LocalizationData(this._locale);
 
   final Locale _locale;
-
-  static Map<String, Map<Tag, String>> _localizedValues = {
+  Map<String, Map<Tag, String>> _localizedValues = {
     'en': {
       Tag.battery0: ConstantData().batteryState0,
       Tag.battery1: ConstantData().batteryState1,
@@ -206,6 +209,8 @@ class LocalizationData {
       Tag.feedback4: ConstantData().feedbackNote0,
       Tag.feedback5: ConstantData().feedbackNote1,
       Tag.feedback6: ConstantData().feedbackNote2,
+      Tag.feedback7: ConstantData().feedbackDialog0,
+      Tag.feedback8: ConstantData().feedbackDialog1,
       Tag.object0: ConstantData().objectToast,
       Tag.privacy: ConstantData().pp,
       Tag.search: ConstantData().search,
@@ -245,6 +250,8 @@ class LocalizationData {
       Tag.feedback4: ConstantData().feedbackNote0TH,
       Tag.feedback5: ConstantData().feedbackNote1TH,
       Tag.feedback6: ConstantData().feedbackNote2TH,
+      Tag.feedback7: ConstantData().feedbackDialog0TH,
+      Tag.feedback8: ConstantData().feedbackDialog1TH,
       Tag.object0: ConstantData().objectToastTH,
       Tag.privacy: ConstantData().ppTH,
       Tag.search: ConstantData().searchTH,
@@ -292,6 +299,8 @@ enum Tag {
   feedback4,
   feedback5,
   feedback6,
+  feedback7,
+  feedback8,
   object0,
   privacy,
   search,
@@ -333,19 +342,16 @@ class LocalizationsDataDelegate
 }
 
 class Provider {
-  dataPass(String str1, [String str2]) {
-    return (str2 == null || str2.trim().isEmpty)
-        ? SecondPage(category: str1)
-        : ThirdPage(name: str1, category: str2);
-  }
+  dataPass(String str1, [String str2]) => (str2 == null || str2.trim().isEmpty)
+      ? SecondPage(category: str1)
+      : ThirdPage(name: str1, category: str2);
 
-  bool isEN(BuildContext context) {
-    return Localizations.localeOf(context).languageCode.contains('en');
-  }
+  bool isEN(BuildContext context) =>
+      Localizations.localeOf(context).languageCode.contains('en');
 
 //  bool isConnected() {
 //    try {
-//      final _result = checkInternetBase();
+//      var _result = checkInternetBase();
 //      _result.then((val) {
 //        String _res = val[0].rawAddress.join('.');
 //        if (_res.trim().isNotEmpty) {
@@ -358,21 +364,18 @@ class Provider {
 //    return false;
 //  }
 //
-//  checkInternetBase() async {
-//    final _result =
-//        await InternetAddress.lookup('youtu.be').timeout(Duration(seconds: 2));
-//    return _result;
-//  }
+//  checkInternetBase() async =>
+//      await InternetAddress.lookup(ConstantData().checkUrl)
+//          .timeout(Duration(seconds: 2));
 
-  Stream<Event> cardDataStreamSubscription(String str) {
-    return FirebaseDatabase.instance.reference().child(str).onChildAdded;
-  }
+  Stream<Event> cardDataStreamSubscription(String str) =>
+      FirebaseDatabase.instance.reference().child(str).onChildAdded;
 
   String createImageUrl(CardData cd, [String str]) {
-    final String _media = '?alt=media&token=',
+    String _dir,
+        _media = '?alt=media&token=',
         _slash = '%2F',
         _url = ConstantData().firebaseUrl;
-    String _dir;
     (str == null || str.trim().isEmpty)
         ? _dir = ConstantData().schema0
         : _dir = selectSchema(str);
@@ -380,8 +383,7 @@ class Provider {
   }
 
   String getDateTime(BuildContext context) {
-    final String _lang = Localizations.localeOf(context).languageCode;
-    String _dateTime;
+    String _dateTime, _lang = Localizations.localeOf(context).languageCode;
     (_lang == 'th')
         ? _dateTime = DateFormat('dd/MM/').format(DateTime.now()) +
             (DateTime.now().year + 543).toString().substring(2) +
@@ -420,7 +422,7 @@ class Provider {
         );
       } on Exception {
         String _connection;
-        var _result = await (Connectivity().checkConnectivity());
+        var _result = await Connectivity().checkConnectivity();
         (_result != ConnectivityResult.mobile &&
                 _result != ConnectivityResult.wifi)
             ? _connection = LocalizationData.of(context, Tag.warning2)
