@@ -1,24 +1,42 @@
 import 'dart:async' show Stream;
 import 'dart:io' show InternetAddress, Platform;
+
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_database/firebase_database.dart'
     show DataSnapshot, Event, FirebaseDatabase;
 import 'package:flutter/foundation.dart' show SynchronousFuture;
 import 'package:flutter/material.dart'
-    show BuildContext, Locale, Localizations, LocalizationsDelegate;
-import 'package:ilect_app/catalog.dart' show Catalog;
-import 'package:ilect_app/main.dart'
-    show FeedbackPage, PPPage, SecondPage, SystemInfoPage, ThirdPage, ToSPage;
+    show
+        BuildContext,
+        Color,
+        FontWeight,
+        Locale,
+        Localizations,
+        LocalizationsDelegate,
+        StatefulWidget,
+        TextStyle,
+        TextTheme,
+        ThemeData;
 import 'package:intl/intl.dart' show DateFormat;
 
+import 'catalog.dart' show Catalog;
+import 'main.dart'
+    show
+        FeedbackPage,
+        PrivacyPolicyPage,
+        SecondPage,
+        SystemInfoPage,
+        ThirdPage,
+        ServiceTermsPage;
+
 class CardData {
-  String id, name, pic, search, token;
+  String id, keyword, name, pic, token;
 
   CardData.fromSnapshot(DataSnapshot snapshot) {
     id = snapshot.key;
+    keyword = snapshot.value['search'];
     name = snapshot.value['name'];
     pic = snapshot.value['pic'];
-    search = snapshot.value['search'];
     token = snapshot.value['token'];
   }
 }
@@ -26,10 +44,10 @@ class CardData {
 class ConstantData {
   static const String
       // Category titles
-      eat = 'กิน',
-      go = 'ไป',
-      listen = 'ฟัง',
-      watch = 'ดู',
+      eating = 'กิน',
+      going = 'ไป',
+      listening = 'ฟัง',
+      watching = 'ดู',
 
       // Icon titles
       amaps = 'Maps',
@@ -39,10 +57,16 @@ class ConstantData {
       youtube = 'YouTube';
   final
       // Page instances
-      page01 = FeedbackPage(),
-      page02 = ToSPage(),
-      page03 = PPPage(),
-      page04 = SystemInfoPage();
+      feedbackPage = FeedbackPage(),
+      privacyPage = PrivacyPolicyPage(),
+      servicePage = ServiceTermsPage(),
+      sysinfoPage = SystemInfoPage();
+  final Color
+      // Color assets
+      defaultColor = Color(0xFF007AFF),
+      dividerColor = Color(0xFFBCBBC1),
+      errorColor = Color(0xFFB71C1C),
+      tileColor = Color(0xFFF5F5F5);
   final Pattern
       // Regular expressions
       thaiPattern = RegExp(r'[ก-๙]');
@@ -57,7 +81,6 @@ class ConstantData {
 
       // External links
       amapsUrl = 'https://maps.apple.com/?q=',
-      checkUrl = 'youtu.be',
       chromeAppStoreUrl =
           'https://itunes.apple.com/us/app/google-chrome/id535886823?mt=8',
       firebaseUrl =
@@ -65,6 +88,7 @@ class ConstantData {
       gmapsAppStoreUrl =
           'https://itunes.apple.com/us/app/google-maps-transit-food/id585027354?mt=8',
       gmapsUrl = 'https://www.google.com/maps/search/',
+      testUrl = 'youtu.be',
       youtubeAppStoreUrl =
           'https://itunes.apple.com/us/app/youtube-watch-listen-stream/id544007664?mt=8',
       youtubeUrl = 'https://www.youtube.com/results?search_query=',
@@ -76,7 +100,7 @@ class ConstantData {
       schema3 = 'listen',
       schema4 = 'watch',
 
-      // Font assets
+      // Font asset
       font = 'EucrosiaUPC',
 
       // Icon assets
@@ -87,32 +111,38 @@ class ConstantData {
       safariIcon = 'assets/safari_icon.png',
       youtubeIcon = 'assets/youtube_icon.png',
 
-      // Other textspans
+      // Other text spans
       batteryState0 = 'Full',
       batteryState0TH = 'เต็ม',
       batteryState1 = 'Charging',
       batteryState1TH = 'กำลังชาร์จ',
       batteryState2 = 'Unplugged',
       batteryState2TH = 'ไม่ได้เสียบปลั๊ก',
+      bottomAppBarTooltip0 = 'Back to home page',
+      bottomAppBarTooltip0TH = 'กลับไปหน้าแรก',
+      bottomAppBarTooltip1 = 'Share',
+      bottomAppBarTooltip1TH = 'แชร์',
       copyright =
           '© 2018 School of Information Technology, KMUTT.\nAll rights reserved.',
       copyrightTH = '© 2561 คณะเทคโนโลยีสารสนเทศ, มจธ.\nสงวนลิขสิทธิ์',
-      errorDialog0 = 'Error',
-      errorDialog0TH = 'ข้อผิดพลาด',
-      errorDialog1 = 'Unable to load this page: ',
-      errorDialog1TH = 'ไม่สามารถโหลดหน้านี้ได้: ',
-      errorDialog2 = 'No Internet Connection',
-      errorDialog2TH = 'ไม่มีการเชื่อมต่ออินเทอร์เน็ต',
-      errorDialog3 =
+      dateFormat = 'dd/MM/yyyy',
+      dateFormatTH = 'dd/MM/',
+      errorDialog0 = 'Unable to load this page: ',
+      errorDialog0TH = 'ไม่สามารถโหลดหน้านี้ได้: ',
+      errorDialog1 =
           ' requires an internet connection to function properly.\n\n',
-      errorDialog3TH =
+      errorDialog1TH =
           ' จำเป็นต้องใช้อินเทอร์เน็ตเพื่อให้สามารถทำงานได้อย่างถูกต้อง\n\n',
-      errorDialog4 = 'It seems that you have turned on the airplane mode. ' +
+      errorDialog2 = 'It seems that you have turned on the airplane mode. '
           'Please turn on Wi-Fi again or turn off this setting.',
-      errorDialog4TH = 'ดูเหมือนว่าคุณมีการเปิดใช้งานโหมดเครื่องบินอยู่ ' +
+      errorDialog2TH = 'ดูเหมือนว่าคุณมีการเปิดใช้งานโหมดเครื่องบินอยู่ '
           'กรุณาเปิดไวไฟอีกครั้งหรือปิดโหมดเครื่องบิน',
-      errorDialog5 = 'Please check your network settings and try again.',
-      errorDialog5TH = 'โปรดตรวจสอบการตั้งค่าเครือข่ายและลองใหม่อีกครั้ง',
+      errorDialog3 = 'Please check your network settings and try again.',
+      errorDialog3TH = 'โปรดตรวจสอบการตั้งค่าเครือข่ายและลองใหม่อีกครั้ง',
+      errorDialogTitle0 = 'Error',
+      errorDialogTitle0TH = 'ข้อผิดพลาด',
+      errorDialogTitle1 = 'No Internet Connection',
+      errorDialogTitle1TH = 'ไม่มีการเชื่อมต่ออินเทอร์เน็ต',
       feedbackDialog0 = '',
       feedbackDialog0TH = '',
       feedbackDialog1 = 'Write your feedback before sending',
@@ -123,10 +153,10 @@ class ConstantData {
           'นอกเหนือไปจากข้อมูลบัญชีหรือภาพหน้าจอที่คุณได้มีการให้เอาไว้หรือไม่ก็ตาม ',
       feedbackNote1 = 'app and system info',
       feedbackNote1TH = 'ข้อมูลแอปและระบบ',
-      feedbackNote2 = ' on this device will be automatically included. ' +
-          'We\'ll use it to address technical issues and improve our services, ' +
+      feedbackNote2 = ' on this device will be automatically included. '
+          'We\'ll use it to address technical issues and improve our services, '
           'subject to our ',
-      feedbackNote2TH = 'บางส่วนบนอุปกรณ์เครื่องนี้จะถูกส่งไปโดยอัตโนมัติ ' +
+      feedbackNote2TH = 'บางส่วนบนอุปกรณ์เครื่องนี้จะถูกส่งไปโดยอัตโนมัติ '
           'เราจะใช้ข้อมูลดังกล่าวมาเพื่อแก้ไขปัญหาด้านเทคนิคและปรับปรุงการให้บริการโดยเป็นไปตาม',
       feedbackPage0 = 'From:',
       feedbackPage0IOS = 'From',
@@ -137,54 +167,58 @@ class ConstantData {
       feedbackPage2TH = 'เขียนความคิดเห็นของคุณ',
       feedbackPage3 = 'Screenshot',
       feedbackPage3TH = 'ภาพหน้าจอ',
+      firebaseSlash = '%2F',
+      firebaseToken = '?alt=media&token=',
       objectToast = 'Open ',
       objectToastTH = 'เปิด ',
-      op = 'Offline Pictures',
+      offline = 'Offline Pictures',
       searchAlertButton = 'Show in',
       searchAlertButtonTH = 'แสดงใน',
-      searchAlertDialog0 = 'Get',
-      searchAlertDialog0TH = 'รับ',
-      searchAlertDialog1 = 'You followed a link that requires the app \“',
-      searchAlertDialog1TH = 'คุณได้เปิดลิงก์ที่ต้องใช้แอพ \“',
-      searchAlertDialog2 = '\”, which is no longer on your device. ' +
+      searchAlertDialog0 = 'You followed a link that requires the app \“',
+      searchAlertDialog0TH = 'คุณได้เปิดลิงก์ที่ต้องใช้แอพ \“',
+      searchAlertDialog1 = '\”, which is no longer on your device. '
           'You can get it from the App Store.',
-      searchAlertDialog2TH =
+      searchAlertDialog1TH =
           '\” แต่อุปกรณ์ของคุณไม่มีแอพนี้แล้ว คุณสามารถรับแอพได้จาก App Store',
+      searchAlertDialogTitle = 'Get',
+      searchAlertDialogTitleTH = 'รับ',
       searchSnackBar = 'Redirect to ',
       searchSnackBarTH = 'กำลังเปิดไปยัง ',
       share =
           'ฉันได้ใช้แอป iLect แล้วนะ\nอยากจะให้เพื่อนๆมาลองใช้กัน\n\nดาวน์โหลดได้ที่ ...',
-      sysinfo0 = 'Device model',
-      sysinfo0TH = 'รุ่นของอุปกรณ์',
-      sysinfo1 = 'OS version',
-      sysinfo1TH = 'เวอร์ชันของระบบปฏิบัติการ',
-      sysinfo2 = 'Application name',
-      sysinfo2TH = 'ชื่อแอปพลิเคชัน',
-      sysinfo3 = 'Application identifier',
-      sysinfo3TH = 'ตัวระบุแอปพลิเคชัน',
-      sysinfo4 = 'Application version',
-      sysinfo4TH = 'เวอร์ชันของแอปพลิเคชัน',
-      sysinfo5 = 'Time',
-      sysinfo5TH = 'เวลา',
-      sysinfo6 = 'Battery level',
-      sysinfo6TH = 'ระดับแบตเตอรี่',
-      sysinfo7 = 'Battery state',
-      sysinfo7TH = 'สถานะแบตเตอรี่',
-      sysinfo8 = 'Language',
-      sysinfo8TH = 'ภาษา',
-      version = '0.6',
+      sysinfoListTileTitle0 = 'Device model',
+      sysinfoListTileTitle0TH = 'รุ่นของอุปกรณ์',
+      sysinfoListTileTitle1 = 'OS version',
+      sysinfoListTileTitle1TH = 'เวอร์ชันของระบบปฏิบัติการ',
+      sysinfoListTileTitle2 = 'Application name',
+      sysinfoListTileTitle2TH = 'ชื่อแอปพลิเคชัน',
+      sysinfoListTileTitle3 = 'Application identifier',
+      sysinfoListTileTitle3TH = 'ตัวระบุแอปพลิเคชัน',
+      sysinfoListTileTitle4 = 'Application version',
+      sysinfoListTileTitle4TH = 'เวอร์ชันของแอปพลิเคชัน',
+      sysinfoListTileTitle5 = 'Time',
+      sysinfoListTileTitle5TH = 'เวลา',
+      sysinfoListTileTitle6 = 'Battery level',
+      sysinfoListTileTitle6TH = 'ระดับแบตเตอรี่',
+      sysinfoListTileTitle7 = 'Battery state',
+      sysinfoListTileTitle7TH = 'สถานะแบตเตอรี่',
+      sysinfoListTileTitle8 = 'Language',
+      sysinfoListTileTitle8TH = 'ภาษา',
+      timeFormat = ' HH:mm:ss ',
+      timeFormatTH = ' H นาฬิกา m นาที s วินาที ',
+      version = '0.7',
 
       // Page titles
       feedback = 'Send Feedback',
       feedbackTH = 'ส่งความคิดเห็น',
-      pp = 'Privacy Policy',
-      ppTH = 'นโยบายความเป็นส่วนตัว',
+      privacy = 'Privacy Policy',
+      privacyTH = 'นโยบายความเป็นส่วนตัว',
       search = 'Open in',
       searchTH = 'เปิดใน',
-      si = 'System information',
-      siTH = 'ข้อมูลระบบ',
-      tos = 'Terms of Service',
-      tosTH = 'ข้อกำหนดในการให้บริการ';
+      service = 'Terms of Service',
+      serviceTH = 'ข้อกำหนดในการให้บริการ',
+      sysinfo = 'System information',
+      sysinfoTH = 'ข้อมูลระบบ';
 }
 
 class LocalizationData {
@@ -197,8 +231,8 @@ class LocalizationData {
       Tag.battery1: ConstantData().batteryState1,
       Tag.battery2: ConstantData().batteryState2,
       Tag.copyright: ConstantData().copyright,
-      Tag.error0: ConstantData().errorDialog0,
-      Tag.error1: ConstantData().errorDialog1,
+      Tag.error0: ConstantData().errorDialogTitle0,
+      Tag.error1: ConstantData().errorDialog0,
       Tag.feedback: ConstantData().feedback,
       Tag.feedback0: (!Platform.isIOS)
           ? ConstantData().feedbackPage0
@@ -211,37 +245,41 @@ class LocalizationData {
       Tag.feedback6: ConstantData().feedbackNote2,
       Tag.feedback7: ConstantData().feedbackDialog0,
       Tag.feedback8: ConstantData().feedbackDialog1,
-      Tag.object0: ConstantData().objectToast,
-      Tag.privacy: ConstantData().pp,
+      Tag.formatDate: ConstantData().dateFormat,
+      Tag.formatTime: ConstantData().timeFormat,
+      Tag.privacy: ConstantData().privacy,
       Tag.search: ConstantData().search,
-      Tag.search0: ConstantData().searchAlertDialog0,
-      Tag.search1: ConstantData().searchAlertDialog1,
-      Tag.search2: ConstantData().searchAlertDialog2,
+      Tag.search0: ConstantData().searchAlertDialogTitle,
+      Tag.search1: ConstantData().searchAlertDialog0,
+      Tag.search2: ConstantData().searchAlertDialog1,
       Tag.search3: ConstantData().searchAlertButton,
       Tag.search4: ConstantData().searchSnackBar,
-      Tag.service: ConstantData().tos,
-      Tag.sysinfo: ConstantData().si,
-      Tag.sysinfo0: ConstantData().sysinfo0,
-      Tag.sysinfo1: ConstantData().sysinfo1,
-      Tag.sysinfo2: ConstantData().sysinfo2,
-      Tag.sysinfo3: ConstantData().sysinfo3,
-      Tag.sysinfo4: ConstantData().sysinfo4,
-      Tag.sysinfo5: ConstantData().sysinfo5,
-      Tag.sysinfo6: ConstantData().sysinfo6,
-      Tag.sysinfo7: ConstantData().sysinfo7,
-      Tag.sysinfo8: ConstantData().sysinfo8,
-      Tag.warning0: ConstantData().errorDialog2,
-      Tag.warning1: ConstantData().title + ConstantData().errorDialog3,
-      Tag.warning2: ConstantData().errorDialog4,
-      Tag.warning3: ConstantData().errorDialog5,
+      Tag.service: ConstantData().service,
+      Tag.sysinfo: ConstantData().sysinfo,
+      Tag.sysinfo0: ConstantData().sysinfoListTileTitle0,
+      Tag.sysinfo1: ConstantData().sysinfoListTileTitle1,
+      Tag.sysinfo2: ConstantData().sysinfoListTileTitle2,
+      Tag.sysinfo3: ConstantData().sysinfoListTileTitle3,
+      Tag.sysinfo4: ConstantData().sysinfoListTileTitle4,
+      Tag.sysinfo5: ConstantData().sysinfoListTileTitle5,
+      Tag.sysinfo6: ConstantData().sysinfoListTileTitle6,
+      Tag.sysinfo7: ConstantData().sysinfoListTileTitle7,
+      Tag.sysinfo8: ConstantData().sysinfoListTileTitle8,
+      Tag.toast: ConstantData().objectToast,
+      Tag.tooltip0: ConstantData().bottomAppBarTooltip0,
+      Tag.tooltip1: ConstantData().bottomAppBarTooltip1,
+      Tag.warning0: ConstantData().errorDialogTitle1,
+      Tag.warning1: ConstantData().title + ConstantData().errorDialog1,
+      Tag.warning2: ConstantData().errorDialog2,
+      Tag.warning3: ConstantData().errorDialog3,
     },
     'th': {
       Tag.battery0: ConstantData().batteryState0TH,
       Tag.battery1: ConstantData().batteryState1TH,
       Tag.battery2: ConstantData().batteryState2TH,
       Tag.copyright: ConstantData().copyrightTH,
-      Tag.error0: ConstantData().errorDialog0TH,
-      Tag.error1: ConstantData().errorDialog1TH,
+      Tag.error0: ConstantData().errorDialogTitle0TH,
+      Tag.error1: ConstantData().errorDialog0TH,
       Tag.feedback: ConstantData().feedbackTH,
       Tag.feedback0: ConstantData().feedbackPage0TH,
       Tag.feedback1: ConstantData().feedbackPage1TH,
@@ -252,29 +290,33 @@ class LocalizationData {
       Tag.feedback6: ConstantData().feedbackNote2TH,
       Tag.feedback7: ConstantData().feedbackDialog0TH,
       Tag.feedback8: ConstantData().feedbackDialog1TH,
-      Tag.object0: ConstantData().objectToastTH,
-      Tag.privacy: ConstantData().ppTH,
+      Tag.formatDate: ConstantData().dateFormatTH,
+      Tag.formatTime: ConstantData().timeFormatTH,
+      Tag.privacy: ConstantData().privacyTH,
       Tag.search: ConstantData().searchTH,
-      Tag.search0: ConstantData().searchAlertDialog0TH,
-      Tag.search1: ConstantData().searchAlertDialog1TH,
-      Tag.search2: ConstantData().searchAlertDialog2TH,
+      Tag.search0: ConstantData().searchAlertDialogTitleTH,
+      Tag.search1: ConstantData().searchAlertDialog0TH,
+      Tag.search2: ConstantData().searchAlertDialog1TH,
       Tag.search3: ConstantData().searchAlertButtonTH,
       Tag.search4: ConstantData().searchSnackBarTH,
-      Tag.service: ConstantData().tosTH,
-      Tag.sysinfo: ConstantData().siTH,
-      Tag.sysinfo0: ConstantData().sysinfo0TH,
-      Tag.sysinfo1: ConstantData().sysinfo1TH,
-      Tag.sysinfo2: ConstantData().sysinfo2TH,
-      Tag.sysinfo3: ConstantData().sysinfo3TH,
-      Tag.sysinfo4: ConstantData().sysinfo4TH,
-      Tag.sysinfo5: ConstantData().sysinfo5TH,
-      Tag.sysinfo6: ConstantData().sysinfo6TH,
-      Tag.sysinfo7: ConstantData().sysinfo7TH,
-      Tag.sysinfo8: ConstantData().sysinfo8TH,
-      Tag.warning0: ConstantData().errorDialog2TH,
-      Tag.warning1: ConstantData().title + ConstantData().errorDialog3TH,
-      Tag.warning2: ConstantData().errorDialog4TH,
-      Tag.warning3: ConstantData().errorDialog5TH,
+      Tag.service: ConstantData().serviceTH,
+      Tag.sysinfo: ConstantData().sysinfoTH,
+      Tag.sysinfo0: ConstantData().sysinfoListTileTitle0TH,
+      Tag.sysinfo1: ConstantData().sysinfoListTileTitle1TH,
+      Tag.sysinfo2: ConstantData().sysinfoListTileTitle2TH,
+      Tag.sysinfo3: ConstantData().sysinfoListTileTitle3TH,
+      Tag.sysinfo4: ConstantData().sysinfoListTileTitle4TH,
+      Tag.sysinfo5: ConstantData().sysinfoListTileTitle5TH,
+      Tag.sysinfo6: ConstantData().sysinfoListTileTitle6TH,
+      Tag.sysinfo7: ConstantData().sysinfoListTileTitle7TH,
+      Tag.sysinfo8: ConstantData().sysinfoListTileTitle8TH,
+      Tag.toast: ConstantData().objectToastTH,
+      Tag.tooltip0: ConstantData().bottomAppBarTooltip0TH,
+      Tag.tooltip1: ConstantData().bottomAppBarTooltip1TH,
+      Tag.warning0: ConstantData().errorDialogTitle1TH,
+      Tag.warning1: ConstantData().title + ConstantData().errorDialog1TH,
+      Tag.warning2: ConstantData().errorDialog2TH,
+      Tag.warning3: ConstantData().errorDialog3TH,
     },
   };
 
@@ -301,7 +343,8 @@ enum Tag {
   feedback6,
   feedback7,
   feedback8,
-  object0,
+  formatDate,
+  formatTime,
   privacy,
   search,
   search0,
@@ -320,6 +363,9 @@ enum Tag {
   sysinfo6,
   sysinfo7,
   sysinfo8,
+  toast,
+  tooltip0,
+  tooltip1,
   warning0,
   warning1,
   warning2,
@@ -342,10 +388,6 @@ class LocalizationsDataDelegate
 }
 
 class Provider {
-  dataPass(String str1, [String str2]) => (str2 == null || str2.trim().isEmpty)
-      ? SecondPage(category: str1)
-      : ThirdPage(name: str1, category: str2);
-
   bool isEN(BuildContext context) =>
       Localizations.localeOf(context).languageCode.contains('en');
 
@@ -365,73 +407,106 @@ class Provider {
 //  }
 //
 //  checkInternetBase() async =>
-//      await InternetAddress.lookup(ConstantData().checkUrl)
+//      await InternetAddress.lookup(ConstantData().testUrl)
 //          .timeout(Duration(seconds: 2));
 
-  Stream<Event> cardDataStreamSubscription(String str) =>
-      FirebaseDatabase.instance.reference().child(str).onChildAdded;
-
-  String createImageUrl(CardData cd, [String str]) {
-    String _dir,
-        _media = '?alt=media&token=',
-        _slash = '%2F',
-        _url = ConstantData().firebaseUrl;
-    (str == null || str.trim().isEmpty)
-        ? _dir = ConstantData().schema0
-        : _dir = selectSchema(str);
-    return [_url, _dir, _slash, cd.pic, _media, cd.token].join();
+  StatefulWidget passData(String message, [String category]) {
+    return (category == null || category.trim().isEmpty)
+        ? SecondPage(category: message)
+        : ThirdPage(category: category, name: message);
   }
 
-  String getDateTime(BuildContext context) {
-    String _dateTime, _lang = Localizations.localeOf(context).languageCode;
-    (_lang == 'th')
-        ? _dateTime = DateFormat('dd/MM/').format(DateTime.now()) +
-            (DateTime.now().year + 543).toString().substring(2) +
-            DateFormat(' H นาฬิกา m นาที s วินาที').format(DateTime.now())
-        : _dateTime = DateFormat('dd/MM/yyyy').format(DateTime.now()) +
-            DateFormat(' HH:mm:ss').format(DateTime.now());
-    _dateTime += ' GMT' +
+  Stream<Event> cardDataStreamSubscription(String schema) =>
+      FirebaseDatabase.instance.reference().child(schema).onChildAdded;
+
+  String createImageUrl(CardData cardData, [String category]) {
+    return [
+      ConstantData().firebaseUrl,
+      (category == null || category.trim().isEmpty)
+          ? ConstantData().schema0
+          : selectSchema(category),
+      ConstantData().firebaseSlash,
+      cardData.pic,
+      ConstantData().firebaseToken,
+      cardData.token
+    ].join();
+  }
+
+  String fetchDateTime(BuildContext context) {
+    return DateFormat(LocalizationData.of(context, Tag.formatDate)).format(
+          DateTime.now(),
+        ) +
+        ((Localizations.localeOf(context).languageCode == 'th')
+            ? (DateTime.now().year + 543).toString().substring(2)
+            : '') +
+        DateFormat(LocalizationData.of(context, Tag.formatTime)).format(
+          DateTime.now(),
+        ) +
+        'GMT' +
         DateTime.now().timeZoneName.substring(0, 1) +
         int.parse(DateTime.now().timeZoneName.substring(1)).toString();
-    return _dateTime;
   }
 
-  String selectSchema(String str) {
-    switch (str) {
-      case ConstantData.eat:
-        str = ConstantData().schema1;
+  String selectSchema(String category) {
+    switch (category) {
+      case ConstantData.eating:
+        category = ConstantData().schema1;
         break;
-      case ConstantData.go:
-        str = ConstantData().schema2;
+      case ConstantData.going:
+        category = ConstantData().schema2;
         break;
-      case ConstantData.listen:
-        str = ConstantData().schema3;
+      case ConstantData.listening:
+        category = ConstantData().schema3;
         break;
-      case ConstantData.watch:
-        str = ConstantData().schema4;
+      case ConstantData.watching:
+        category = ConstantData().schema4;
         break;
     }
-    return str;
+    return category;
   }
 
   void checkInternet(BuildContext context) async {
-    if (!Platform.isIOS)
+    if (!Platform.isIOS) {
       try {
-        await InternetAddress.lookup(ConstantData().checkUrl).timeout(
+        await InternetAddress.lookup(ConstantData().testUrl).timeout(
           Duration(seconds: 2),
         );
       } on Exception {
+        ConnectivityResult _result = await Connectivity().checkConnectivity();
         String _connection;
-        var _result = await Connectivity().checkConnectivity();
-        (_result != ConnectivityResult.mobile &&
-                _result != ConnectivityResult.wifi)
+        (_result == ConnectivityResult.none)
             ? _connection = LocalizationData.of(context, Tag.warning2)
             : _connection = LocalizationData.of(context, Tag.warning3);
         Catalog().showWarningDialog(
           context,
-          LocalizationData.of(context, Tag.warning0),
-          str2: LocalizationData.of(context, Tag.warning1) + _connection,
+          LocalizationData.of(context, Tag.warning1) + _connection,
+          title: LocalizationData.of(context, Tag.warning0),
         );
       }
+    }
+  }
+}
+
+class ProviderThemeData {
+  ProviderThemeData([this._color]) {
+    _setTheme();
+  }
+
+  Color _color = ConstantData().defaultColor;
+  ThemeData theme;
+
+  void _setTheme() {
+    theme = ThemeData(
+      cursorColor: _color,
+      primaryColor: Color(0xFFFFFFFF),
+      primaryTextTheme: TextTheme(
+        body1: TextStyle(color: Color(0xFFFFFFFF)),
+        title: (Platform.isIOS) ? null : TextStyle(fontWeight: FontWeight.w500),
+      ),
+      textTheme: TextTheme(
+        button: TextStyle(fontWeight: FontWeight.w500),
+        title: TextStyle(fontWeight: FontWeight.w500),
+      ),
+    );
   }
 }

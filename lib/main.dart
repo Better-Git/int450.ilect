@@ -1,5 +1,5 @@
 import 'dart:async' show StreamSubscription;
-import 'dart:io' show File, Platform;
+
 import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:firebase_database/firebase_database.dart' show Event;
 import 'package:flutter/cupertino.dart';
@@ -8,8 +8,9 @@ import 'package:flutter/services.dart'
     show DeviceOrientation, SystemChrome, SystemUiOverlayStyle;
 import 'package:flutter_localizations/flutter_localizations.dart'
     show GlobalMaterialLocalizations;
-import 'package:ilect_app/catalog.dart';
-import 'package:ilect_app/provider.dart';
+
+import 'catalog.dart';
+import 'provider.dart';
 
 void main() => runApp(ILectApp());
 
@@ -28,21 +29,7 @@ class ILectApp extends StatelessWidget {
       ),
     );
     return DynamicTheme(
-      data: (theme) {
-        return ThemeData(
-          cursorColor: Catalog().defaultColor,
-          primaryColor: Colors.white,
-          primaryTextTheme: (Platform.isIOS)
-              ? null
-              : TextTheme(
-                  title: TextStyle(fontWeight: FontWeight.w500),
-                ),
-          textTheme: TextTheme(
-            button: TextStyle(fontWeight: FontWeight.w500),
-            title: TextStyle(fontWeight: FontWeight.w500),
-          ),
-        );
-      },
+      data: (theme) => ProviderThemeData().theme,
       themedWidgetBuilder: (context, theme) {
         return MaterialApp(
           builder: (context, navigator) => Theme(child: navigator, data: theme),
@@ -82,7 +69,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class PPPage extends StatelessWidget {
+class PrivacyPolicyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,6 +92,20 @@ class SecondPage extends StatefulWidget {
   _SecondPageState createState() => _SecondPageState();
 }
 
+class ServiceTermsPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(LocalizationData.of(context, Tag.service)),
+      ),
+      body: Scrollbar(
+        child: Center(),
+      ),
+    );
+  }
+}
+
 class SystemInfoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -114,7 +115,7 @@ class SystemInfoPage extends StatelessWidget {
       ),
       body: Scrollbar(
         child: ListView(
-          children: Catalog().systemInfoList(context),
+          children: Catalog().toSystemInfoListTile(context),
         ),
       ),
     );
@@ -129,20 +130,6 @@ class ThirdPage extends StatefulWidget {
 
   @override
   _ThirdPageState createState() => _ThirdPageState();
-}
-
-class ToSPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(LocalizationData.of(context, Tag.service)),
-      ),
-      body: Scrollbar(
-        child: Center(),
-      ),
-    );
-  }
 }
 
 class _HomePageState extends State<HomePage> {
@@ -190,7 +177,7 @@ class _HomePageState extends State<HomePage> {
           physics: NeverScrollableScrollPhysics(),
         ),
       ),
-      bottomNavigationBar: Catalog().bottomAppBarExtended(widget.title),
+      bottomNavigationBar: Catalog().bottomAppBarOverride(widget.title),
     );
   }
 }
@@ -223,7 +210,7 @@ class _SecondPageState extends State<SecondPage> {
         child: ListView(
           children: List.generate(
             _items.length,
-            (i) => Catalog().cardWidget(i, _items),
+            (i) => Catalog().cardWidget(i, _items, widget.category),
           ),
           padding: EdgeInsets.only(
             bottom: 6.0,
@@ -233,10 +220,7 @@ class _SecondPageState extends State<SecondPage> {
           ),
         ),
       ),
-      bottomNavigationBar: Catalog().bottomAppBar(
-        widget.category,
-        widget.category,
-      ),
+      bottomNavigationBar: Catalog().bottomAppBar(widget.category),
     );
   }
 }
@@ -269,7 +253,7 @@ class _ThirdPageState extends State<ThirdPage> {
           ),
           SafeArea(
             child: Container(
-              child: Row(children: Catalog().splitString(false, widget.name)),
+              child: Row(children: Catalog().toSplitString(false, widget.name)),
               padding: EdgeInsets.only(left: 16.0),
             ),
             top: true,
