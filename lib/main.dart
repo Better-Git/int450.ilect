@@ -29,10 +29,10 @@ class ILectApp extends StatelessWidget {
       ),
     );
     return DynamicTheme(
-      data: (theme) => ProviderThemeData().theme,
-      themedWidgetBuilder: (context, theme) {
+      data: (_) => ProviderThemeData().theme,
+      themedWidgetBuilder: (_, theme) {
         return MaterialApp(
-          builder: (context, navigator) => Theme(child: navigator, data: theme),
+          builder: (_, widget) => Theme(child: widget, data: theme),
           home: HomePage(title: ConstantData().title),
           localizationsDelegates: [
             LocalizationsDataDelegate(),
@@ -174,7 +174,6 @@ class _HomePageState extends State<HomePage> {
             (i) => Catalog().cardWidget(i, _items),
           ),
           crossAxisCount: 2,
-          physics: NeverScrollableScrollPhysics(),
         ),
       ),
       bottomNavigationBar: Catalog().bottomAppBarOverride(widget.title),
@@ -243,7 +242,7 @@ class _ThirdPageState extends State<ThirdPage> {
                 SliverSafeArea(
                   sliver: SliverList(
                     delegate: SliverChildListDelegate(
-                      Catalog().searchList(widget.category),
+                      Catalog().searchList(this, widget.category),
                     ),
                   ),
                   top: false,

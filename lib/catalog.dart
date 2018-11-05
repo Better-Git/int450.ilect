@@ -21,26 +21,10 @@ class Catalog {
   List _systemInfoList(BuildContext context) =>
       _SystemInfoListTileState.override()._systemInfoDynamicList(context);
 
-  // ignore: missing_return
-  List<Widget> searchList(String category) {
+  List<Widget> searchList(parent, String category) {
     _SearchListTile._category = category;
-    switch (category) {
-      case ConstantData.eating:
-      case ConstantData.going:
-        return [
-          _SearchListTile(ConstantData().gmapsIcon, ConstantData.gmaps),
-          _SearchListTile(ConstantData().amapsIcon, ConstantData.amaps),
-          _SearchListTile(ConstantData().chromeIcon, ConstantData.chrome),
-          _SearchListTile(ConstantData().safariIcon, ConstantData.safari),
-        ];
-      case ConstantData.listening:
-      case ConstantData.watching:
-        return [
-          _SearchListTile(ConstantData().youtubeIcon, ConstantData.youtube),
-          _SearchListTile(ConstantData().chromeIcon, ConstantData.chrome),
-          _SearchListTile(ConstantData().safariIcon, ConstantData.safari),
-        ];
-    }
+    _SearchListTile._parent = parent;
+    return _SearchListTile.override()._searchListTileDynamicList();
   }
 
   List<Widget> toSplitString(bool isCard, String message) {
@@ -76,7 +60,7 @@ class Catalog {
   List<Widget> toSystemInfoListTile(BuildContext context) {
     var _items = List<Widget>(), _list = _systemInfoList(context);
     for (var _e in _list) {
-      _items.add(_SystemInfoListTile(context: context, content: _e));
+      _items.add(_SystemInfoListTile(content: _e, context: context));
     }
     return _items;
   }
@@ -126,15 +110,14 @@ class Catalog {
     );
   }
 
-  Widget _createBackIcon() =>
+  Widget _backIcon() =>
       (!Platform.isIOS) ? Icon(Icons.arrow_back) : Icon(Icons.arrow_back_ios);
 
   Widget bottomAppBar(String title) => _BottomAppBar(title);
 
   Widget bottomAppBarOverride(String title) => _BottomAppBar.override(title);
 
-  // (!Platform.isIOS) ? _FeedbackWidgetAndroid() :
-  Widget feedbackWidget() => _FeedbackWidgetIOS();
+  Widget feedbackWidget() => _FeedbackWidget();
 
   Widget cardWidget(int i, List list, [String category]) =>
       _CardWidget(i, list, category);
@@ -146,11 +129,11 @@ class Catalog {
       [bool isSearchAlert]) {
     (!Platform.isIOS)
         ? showDialog(
-            builder: (BuildContext context) => _ErrorDialog(content),
+            builder: (_) => _ErrorDialog(content),
             context: context,
           )
         : showCupertinoDialog(
-            builder: (BuildContext context) {
+            builder: (context) {
               return (isSearchAlert ?? true)
                   ? _SearchAlertDialog(context, content)
                   : _ErrorDialog(content);
@@ -160,11 +143,11 @@ class Catalog {
   }
 
   void showWarningDialog(BuildContext context, String content,
-      {String title, bool override}) {
+      {bool override, bool warning, String title}) {
     (!Platform.isIOS || (override ?? false))
         ? showDialog(
-            barrierDismissible: false,
-            builder: (BuildContext context) {
+            barrierDismissible: (warning ?? true) ? false : true,
+            builder: (_) {
               return (override ?? false)
                   ? _ErrorDialog.override(content)
                   : _ErrorDialog.extend(content, title);
@@ -172,8 +155,7 @@ class Catalog {
             context: context,
           )
         : showCupertinoDialog(
-            builder: (BuildContext context) =>
-                _ErrorDialog.extend(content, title),
+            builder: (_) => _ErrorDialog.extend(content, title),
             context: context,
           );
   }
@@ -199,8 +181,8 @@ class _BottomAppBar extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.menu),
               onPressed: () {
-                showModalBottomSheet<Null>(
-                  builder: (BuildContext context) => _BottomDrawer(),
+                showModalBottomSheet(
+                  builder: (_) => _BottomDrawer(),
                   context: context,
                 );
               },
@@ -232,11 +214,12 @@ class _BottomAppBar extends StatelessWidget {
             (_isOverridden)
                 ? IconButton(
                     icon: Icon(Icons.share),
-                    onPressed: () => Share.share(ConstantData().share),
+                    onPressed: () =>
+                        Share.share(LocalizationData.of(context, Tag.share)),
                     tooltip: LocalizationData.of(context, Tag.tooltip1),
                   )
                 : IconButton(
-                    icon: Catalog()._createBackIcon(),
+                    icon: Catalog()._backIcon(),
                     onPressed: () => Navigator.pop(context),
                     tooltip:
                         MaterialLocalizations.of(context).backButtonTooltip,
@@ -276,7 +259,7 @@ class _BottomDrawer extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ConstantData().feedbackPage,
+                builder: (_) => ConstantData().feedbackPage,
               ),
             );
           },
@@ -294,7 +277,7 @@ class _BottomDrawer extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ConstantData().servicePage,
+                          builder: (_) => ConstantData().servicePage,
                         ),
                       );
                     },
@@ -306,7 +289,7 @@ class _BottomDrawer extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ConstantData().privacyPage,
+                          builder: (_) => ConstantData().privacyPage,
                         ),
                       );
                     },
@@ -414,6 +397,127 @@ class _ErrorDialog extends StatelessWidget {
   }
 }
 
+class _FeedbackFieldIOS extends StatelessWidget {
+  _FeedbackFieldIOS(this._parent);
+
+  final _parent;
+
+  @override
+  Widget build(BuildContext context) {
+    String _error = _parent._warning, _helper = _parent._note;
+    return Flexible(
+      child: Column(
+        children: <Widget>[
+          Padding(
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  child: Text(
+                    LocalizationData.of(context, Tag.feedback0),
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontSize: 14.5,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  padding: EdgeInsets.only(top: 7.5),
+                ),
+                Container(
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: TextFormField(
+                          controller: _parent._emailController,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 5.0,
+                              vertical: 7.5,
+                            ),
+                            counterText: '',
+                            errorText: _error,
+                            helperText: _helper,
+                            hintStyle: TextStyle(
+                              color: Colors.black26,
+                              letterSpacing: -0.5,
+                            ),
+                            hintText:
+                                LocalizationData.of(context, Tag.feedback1),
+                          ),
+                          focusNode: _parent._emailFocus,
+                          keyboardType: TextInputType.emailAddress,
+                          maxLength: 108,
+                          maxLines: null,
+                          onFieldSubmitted: (_) {
+                            FocusScope.of(context).requestFocus(
+                              _parent._feedbackFocus,
+                            );
+                          },
+                          style: TextStyle(color: Colors.black, fontSize: 14.5),
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            return (_parent._validateEmail(value) == null)
+                                ? null
+                                : _error;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  padding: EdgeInsets.only(left: 55.0, right: 30.0),
+                ),
+                (_error == null)
+                    ? Container()
+                    : Positioned(
+                        child: Icon(
+                          Icons.error_outline,
+                          color: ConstantData().errorColor,
+                        ),
+                        right: 10.0,
+                        top: 6.5,
+                      ),
+              ],
+            ),
+            padding: EdgeInsets.only(left: 20.0, top: 10.15),
+          ),
+          Padding(
+            child: Divider(color: ConstantData().dividerColor, height: 0.0),
+            padding: (_error == null && _helper == null)
+                ? EdgeInsets.zero
+                : EdgeInsets.only(top: 11.25),
+          ),
+          Padding(
+            child: TextFormField(
+              controller: _parent._feedbackController,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 7.5),
+//                focusedBorder: UnderlineInputBorder(
+//                  borderSide: BorderSide(color: Colors.black54),
+//                ),
+                hintStyle: TextStyle(
+                  color: Colors.black54,
+                  letterSpacing: -0.5,
+                ),
+                hintText: LocalizationData.of(context, Tag.feedback3),
+              ),
+              focusNode: _parent._feedbackFocus,
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
+              style: TextStyle(color: Colors.black, fontSize: 16.5),
+//              style: TextStyle(color: Colors.black, fontSize: 20.0),
+              textInputAction: TextInputAction.done,
+              validator: (value) => (value.trim().isNotEmpty) ? null : '',
+            ),
+            padding: EdgeInsets.only(left: 20.0, right: 20.0, top: 8.32),
+          ),
+        ],
+      ),
+      flex: 0,
+    );
+  }
+}
+
 class _FeedbackNoteIOS extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -422,28 +526,28 @@ class _FeedbackNoteIOS extends StatelessWidget {
         title: RichText(
           text: TextSpan(
             children: <TextSpan>[
-              TextSpan(text: LocalizationData.of(context, Tag.feedback4)),
+              TextSpan(text: LocalizationData.of(context, Tag.feedback5)),
               TextSpan(
                 recognizer: TapGestureRecognizer()
                   ..onTap = () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ConstantData().sysinfoPage,
+                        builder: (_) => ConstantData().sysinfoPage,
                       ),
                     );
                   },
                 style: TextStyle(color: ConstantData().defaultColor),
-                text: LocalizationData.of(context, Tag.feedback5),
+                text: LocalizationData.of(context, Tag.feedback6),
               ),
-              TextSpan(text: LocalizationData.of(context, Tag.feedback6)),
+              TextSpan(text: LocalizationData.of(context, Tag.feedback7)),
               TextSpan(
                 recognizer: TapGestureRecognizer()
                   ..onTap = () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ConstantData().privacyPage,
+                        builder: (_) => ConstantData().privacyPage,
                       ),
                     );
                   },
@@ -457,7 +561,7 @@ class _FeedbackNoteIOS extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ConstantData().servicePage,
+                        builder: (_) => ConstantData().servicePage,
                       ),
                     );
                   },
@@ -489,8 +593,8 @@ class _FeedbackScreenshotIOS extends StatelessWidget {
   final File _image;
 
   void _getImage() async {
-    var _img = await ImagePicker.pickImage(source: ImageSource.gallery);
-    _parent.setState(() => _parent.image = _img);
+    File _img = await ImagePicker.pickImage(source: ImageSource.gallery);
+    _parent.setState(() => _parent._image = _img);
   }
 
   @override
@@ -513,7 +617,7 @@ class _FeedbackScreenshotIOS extends StatelessWidget {
                           width: 59.0,
                         ),
                   title: Text(
-                    LocalizationData.of(context, Tag.feedback3),
+                    LocalizationData.of(context, Tag.feedback4),
                     style: TextStyle(fontSize: 15.0, letterSpacing: -0.5),
                   ),
                   trailing:
@@ -551,25 +655,492 @@ class _FeedbackScreenshotIOS extends StatelessWidget {
   }
 }
 
-class _FeedbackWidgetIOS extends StatefulWidget {
+class _FeedbackWidget extends StatefulWidget {
   @override
-  _FeedbackWidgetIOSState createState() => _FeedbackWidgetIOSState();
+  _FeedbackWidgetState createState() => _FeedbackWidgetState();
 }
 
-class _FeedbackWidgetIOSState extends State<_FeedbackWidgetIOS> {
+class _FeedbackWidgetState extends State<_FeedbackWidget> {
   final _emailController = TextEditingController(),
       _emailFocus = FocusNode(),
       _feedbackController = TextEditingController(),
       _feedbackFocus = FocusNode(),
       _formKey = GlobalKey<FormState>();
-  int _i = 0;
-  File image;
+  bool _isCursorDirty = false, _isEmailValid = false, _isFeedbackDirty = false;
+  Color _sendIconColor = Colors.grey;
+  File _image;
   String _note, _warning;
-  MaterialColor _sendIconColor = Colors.grey;
+
+  _onBackPressed() {
+    _isCursorDirty = false;
+    _isEmailValid = false;
+    _isFeedbackDirty = false;
+    Catalog()._cursorColor(context, ConstantData().defaultColor);
+    Navigator.pop(context);
+  }
+
+  bool _isIPAddress(String input, [bool isIPv6]) {
+    int _discardedDelimiter = ((isIPv6 ?? false) ? '.' : ':').codeUnitAt(0);
+    var _chars = List(), _nums = List();
+    for (int _i = (!(isIPv6 ?? false)) ? 46 : 48;
+        _i < ((!(isIPv6 ?? false)) ? 58 : 103);
+        _i++) {
+      if ((_i > 47) && (_i < 58)) _nums.add(String.fromCharCode(_i));
+      if (((_i != _discardedDelimiter) && (_i != 47)) &&
+          ((_i < 59) ||
+              ((_i > 64) && (_i < 71)) ||
+              ((_i > 96) && (_i < 103)))) {
+        _chars.add(String.fromCharCode(_i));
+      }
+    }
+    if (_nums.any((num) => input.startsWith(num)) &&
+        input.split('').every((value) => _chars.contains(value))) {
+      for (int _i = 0; _i < input.length; _i++) {
+        if ((isIPv6 ?? false)) {
+          if ((_i + 1 >= input.length) || (_i + 2 >= input.length)) break;
+          String _check = input[_i] + input[_i + 1] + input[_i + 2];
+          if (':'.allMatches(_check).length > 2) return false;
+        } else {
+          if ((_i + 1 >= input.length)) break;
+          String _check = input[_i] + input[_i + 1];
+          if ('.'.allMatches(_check).length > 1) return false;
+        }
+      }
+      if ((!(isIPv6 ?? false)) &&
+          (!_nums.any((num) => input.endsWith(num)) ||
+              (input.split('.').length != 4))) return false;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  bool _isIPv4Address(String address) {
+    var _octets = List();
+    address.split('.').forEach((i) => _octets.add(int.parse(i)));
+    if (((_octets[0] > 0) && (_octets[0] < 10)) ||
+        ((_octets[0] > 10) && (_octets[0] < 127)) ||
+        ((_octets[0] > 128) && (_octets[0] < 224))) {
+      switch (_octets[0]) {
+        case 100:
+          if ((_octets[1] < 64) || (_octets[1] > 127)) continue validCase;
+          break;
+        case 169:
+          if (_octets[1] != 254) continue validCase;
+          break;
+        case 172:
+          if ((_octets[1] < 16) || (_octets[1] > 3)) continue validCase;
+          break;
+        case 192:
+          if (((_octets[1] != 0) || ((_octets[2] != 0) && (_octets[2] != 2))) &&
+              ((_octets[1] != 88) || (_octets[2] != 99)) &&
+              (_octets[1] != 168)) continue validCase;
+          break;
+        case 198:
+          if (((_octets[1] < 18) || (_octets[1] > 19)) &&
+              ((_octets[1] != 51) || (_octets[2] != 100))) continue validCase;
+          break;
+        case 203:
+          if ((_octets[1] != 0) || (_octets[2] != 113)) continue validCase;
+          break;
+        validCase:
+        default:
+          if ((_octets[1] < 256) &&
+              (_octets[2] < 256) &&
+              (_octets[3] < 255) &&
+              (_octets[3] != 0)) return true;
+          break;
+      }
+    }
+    return false;
+  }
+
+  bool _isIPv6Address(String address) {
+    List<String> _allocatedBasePrefixes = [
+      '2001',
+      '2003',
+      '2400',
+      '2600',
+      '2610',
+      '2620',
+      '2800',
+      '2a00',
+      '2c00',
+    ];
+    var _allocatedPrefixes = List(), _hextets = List();
+    for (String _prefix in _allocatedBasePrefixes) {
+      for (int _i = 1; _i < 16; _i++) {
+        if (_prefix.endsWith('00')) {
+          _hextets.add(_prefix.substring(0, 3) + _iterateIntToHex(_i));
+        }
+      }
+    }
+    _allocatedPrefixes = List.from(_allocatedBasePrefixes)..addAll(_hextets);
+    _allocatedPrefixes.sort();
+    _hextets.clear();
+    address.split(':').forEach((hex) {
+      _hextets.add(hex.toLowerCase().padLeft(4, '0'));
+    });
+    if (_hextets.length != 8) {
+      for (int _i = 0; _i < 9; _i++) {
+        if (_hextets.length == 8) break;
+        if (_hextets.indexOf('0000') == -1) return false;
+        _hextets.insert(_hextets.indexOf('0000'), '0000');
+      }
+    }
+    if (_hextets.every((value) => value.length < 5) &&
+        _allocatedPrefixes.contains(_hextets[0])) {
+      switch (_hextets[0]) {
+        case '2001':
+          if (_prefixList('0001', '0fff').contains(_hextets[1])) {
+            if ((!((_hextets[1] == '0001') &&
+                    _hextets.getRange(2, 6).every((value) => value == '0000') &&
+                    (_hextets[7] == '0001'))) &&
+                (!((_hextets[1] == '0002') && (_hextets[2] == '0000'))) &&
+                (_hextets[1] != '0003') &&
+                (!((_hextets[1] == '0004') && (_hextets[2] == '0112'))) &&
+                (_hextets[1] != '0005') &&
+                (!_prefixList('0010', '002f').contains(_hextets[1])) &&
+                (_hextets[1] != '0db8')) continue validCase;
+          } else if (_prefixList('1200', '3bff').contains(_hextets[1]) ||
+              _prefixList('4000', '4dff').contains(_hextets[1]) ||
+              _prefixList('5000', '5fff').contains(_hextets[1]) ||
+              _prefixList('8000', 'bfff').contains(_hextets[1])) {
+            continue validCase;
+          }
+          break;
+        case '2003':
+          if (_prefixList('0000', '3fff').contains(_hextets[1])) {
+            continue validCase;
+          }
+          break;
+        case '2610':
+        case '2620':
+          if (_prefixList('0000', '01ff').contains(_hextets[1])) {
+            continue validCase;
+          }
+          break;
+        validCase:
+        default:
+          return true;
+          break;
+      }
+    }
+    return false;
+  }
+
+  bool _validateDomainPart(String domainPart) {
+    if (domainPart.isNotEmpty) {
+      // No digit and special ASCII chars at first and last.
+      if (!domainPart.startsWith(ConstantData().nonDomainPattern) &&
+          !domainPart[domainPart.length - 1].contains(
+            ConstantData().nonDomainPattern,
+          )) {
+        int _realTLDDotIndex = domainPart.lastIndexOf('.');
+        bool _isTLDDotTyped = (_realTLDDotIndex > -1);
+        String _tld = domainPart.substring(_realTLDDotIndex + 1);
+        // No digits and special ASCII chars at TLD
+        // and the minimum length is a language code.
+        if (_isTLDDotTyped &&
+            (_tld.length > 1) &&
+            !_tld.contains(ConstantData().nonDomainPattern)) {
+          String _subDomain = domainPart.substring(0, _realTLDDotIndex);
+          // No digits and special ASCII chars at any NLD
+          if (!_subDomain.startsWith('.') &&
+              !_subDomain.endsWith('.') &&
+              _subDomain.split('.').every((value) {
+                return value.isNotEmpty &&
+                    !value.contains(ConstantData().nonSubDomainPattern) &&
+                    (value.length < 64);
+              })) return true;
+        }
+      } else if (domainPart.startsWith('[') && domainPart.endsWith(']')) {
+        int _realBracketIndex = domainPart.lastIndexOf('[');
+        bool _isBracketTyped = (_realBracketIndex > -1);
+        String _address =
+            domainPart.substring(_realBracketIndex + 1, domainPart.length - 1);
+        if (_isBracketTyped) {
+          // IPv4 check
+          if (_isIPAddress(_address) &&
+              _isIPv4Address(_address) &&
+              ('.'.allMatches(_address).length == 3)) {
+            return true;
+          } else
+          // IPv6 check
+          if (_isIPAddress(_address, true) &&
+              _isIPv6Address(_address) &&
+              (':'.allMatches(_address).length > 1) &&
+              (':'.allMatches(_address).length < 8)) {
+            return true;
+          } else {
+            _warning = LocalizationData.of(context, Tag.feedback9);
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  bool _validateLocalPart(String localPart) {
+    if (localPart.length < 65) {
+      // Validate dot-string
+      if (!localPart.startsWith(ConstantData().nonLocalPattern) &&
+          !localPart[localPart.length - 1].contains(
+            ConstantData().nonLocalPattern,
+          ) &&
+          localPart.split('').every(
+                (value) => !value.contains(ConstantData().nonLocalPattern),
+              )) {
+        if (localPart.length > 1) {
+          for (int _i = 0; _i < localPart.length; _i++) {
+            if ((_i + 1 >= localPart.length)) break;
+            String _check = localPart[_i] + localPart[_i + 1];
+            if ('.'.allMatches(_check).length > 1) {
+              break;
+            } else {
+              return true;
+            }
+          }
+        } else {
+          return true;
+        }
+      } else
+      // Validate quoted-string
+      if (localPart.startsWith('\"') && localPart.endsWith('\"')) {
+        String _quote = localPart.substring(1, localPart.length - 1);
+        if (_quote.contains('\"')) {
+          int _startIndex = 0;
+          var _indices = List(), _list = List();
+          for (int _i = 0; _i < _quote.length; _i++) {
+            if ((_quote[_i] == '\"') || (_quote[_i] == '\\')) {
+              _indices.add(_i);
+            }
+          }
+          _indices.add(404);
+          for (int _j = 0; _j < _indices.length; _j++) {
+            if (_indices[_j] == 404) break;
+            if (_indices[_j] + 1 != _indices[_j + 1]) {
+              _list.add(_quote.substring(_startIndex, _indices[_j] + 1));
+              _startIndex = _indices[_j + 1];
+            }
+          }
+          if (!_list.any((value) => value == '\\') &&
+              !_list.any((value) => value.startsWith('"')) &&
+              !_list.any((value) => value.endsWith('"\\')) &&
+              _list.every((value) {
+                return (('"'.allMatches(value).length % 2 == 0) &&
+                        ('\\'.allMatches(value).length % 2 == 0)) ||
+                    (('"'.allMatches(value).length % 2 != 0) &&
+                        ('\\'.allMatches(value).length % 2 != 0));
+              })) return true;
+        } else {
+          if ('\\'.allMatches(_quote).length % 2 == 0) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  int _iterateHexToInt(String hex) {
+    int _i;
+    switch (hex) {
+      case 'a':
+        _i = 10;
+        break;
+      case 'b':
+        _i = 11;
+        break;
+      case 'c':
+        _i = 12;
+        break;
+      case 'd':
+        _i = 13;
+        break;
+      case 'e':
+        _i = 14;
+        break;
+      case 'f':
+        _i = 15;
+        break;
+      default:
+        _i = int.parse(hex);
+        break;
+    }
+    return _i;
+  }
+
+  List _prefixList(String startValue, String endValue) {
+    var _end = endValue.split(''),
+        _list = List(),
+        _start = startValue.split('');
+    for (int _i = _iterateHexToInt(_start[0]); _i < 16; _i++) {
+      String _first = _iterateIntToHex(_i);
+      int _j = (_first == _start[0]) ? _iterateHexToInt(_start[1]) : 0;
+      for (; _j < 16; _j++) {
+        String _second = _iterateIntToHex(_j);
+        int _k = ((_first == _start[0]) && (_second == _start[1]))
+            ? _iterateHexToInt(_start[2])
+            : 0;
+        for (; _k < 16; _k++) {
+          String _third = _iterateIntToHex(_k);
+          int _l = ((_first == _start[0]) &&
+                  (_second == _start[1]) &&
+                  (_third == _start[2]))
+              ? _iterateHexToInt(_start[3])
+              : 0;
+          for (; _l < 16; _l++) {
+            String _last = _iterateIntToHex(_l),
+                _value = '$_first$_second$_third$_last';
+            _list.add(_value);
+            if ((_first == _end[0]) &&
+                (_second == _end[1]) &&
+                (_third == _end[2]) &&
+                (_last == _end[3])) break;
+          }
+          if ((_first == _end[0]) &&
+              (_second == _end[1]) &&
+              (_third == _end[2])) break;
+        }
+        if ((_first == _end[0]) && (_second == _end[1])) break;
+      }
+      if (_first == _end[0]) break;
+    }
+    return _list;
+  }
+
+  String _feedbackSubString(BuildContext context) {
+    return (Platform.isIOS && Provider().isEN(context))
+        ? LocalizationData.of(context, Tag.feedback).substring(5)
+        : LocalizationData.of(context, Tag.feedback);
+  }
+
+  String _iterateIntToHex(int i) {
+    String _hex;
+    switch (i) {
+      case 10:
+        _hex = 'a';
+        break;
+      case 11:
+        _hex = 'b';
+        break;
+      case 12:
+        _hex = 'c';
+        break;
+      case 13:
+        _hex = 'd';
+        break;
+      case 14:
+        _hex = 'e';
+        break;
+      case 15:
+        _hex = 'f';
+        break;
+      default:
+        _hex = i.toString();
+        break;
+    }
+    return _hex;
+  }
+
+  String _validateEmail(String deFacto) {
+    var _quoteMarks = List();
+    String _email = _emailController.text;
+    int _realAtSignIndex = _email.lastIndexOf('@');
+    bool _isAtSignTyped = (_realAtSignIndex > -1), _isValid = false;
+    _isCursorDirty = (_email.length > 0);
+
+    // Replace any variant of quote marks to straight double quotes (").
+    for (int _i = 39; _i < 65093; _i++) {
+      if ((_i == 39) ||
+          (_i == 171) ||
+          (_i == 187) ||
+          ((_i > 8215) && (_i < 8224)) ||
+          ((_i > 8248) && (_i < 8251)) ||
+          ((_i > 12295) && (_i < 12304)) ||
+          ((_i > 65088) && (_i < 65093))) {
+        _quoteMarks.add(String.fromCharCode(_i));
+      }
+    }
+    _quoteMarks.forEach((char) => _email = _email.replaceAll(char, '"'));
+
+    if (_isAtSignTyped) {
+      String _local = _email.substring(0, _realAtSignIndex);
+      String _domain = _email.substring(_realAtSignIndex + 1);
+      // Validate local part
+      if (_validateLocalPart(_local)) {
+        // Validate domain part
+        _isValid = _validateDomainPart(_domain);
+      }
+      if (!_domain.endsWith(']')) _warning = null;
+    }
+
+    if (!_isCursorDirty || _isValid) {
+      if (_isAtSignTyped) {
+        ((_email.substring(0, _realAtSignIndex).length > 32) ||
+                (_email.substring(_realAtSignIndex).length > 32))
+            ? _note = LocalizationData.of(context, Tag.feedback2)
+            : _note = null;
+      }
+      _isEmailValid = true;
+      _warning = null;
+    } else {
+      _isEmailValid = false;
+      _warning ??= LocalizationData.of(context, Tag.feedback8);
+    }
+    return _warning;
+  }
+
+  void _cursorSendIconColor() {
+    bool _isFeedbackNotEmpty = _feedbackController.text.trim().isNotEmpty;
+    (!_isFeedbackDirty)
+        ? (_emailFocus.hasFocus)
+            ? (_isEmailValid)
+                ? Catalog()._cursorColor(context, ConstantData().defaultColor)
+                : Catalog()._cursorColor(context, ConstantData().errorColor)
+            : Catalog()._cursorColor(context, ConstantData().defaultColor)
+        : (_feedbackFocus.hasFocus)
+            ? (_isFeedbackNotEmpty)
+                ? Catalog()._cursorColor(context, ConstantData().defaultColor)
+                : Catalog()._cursorColor(context, ConstantData().errorColor)
+            : (_isEmailValid)
+                ? Catalog()._cursorColor(context, ConstantData().defaultColor)
+                : Catalog()._cursorColor(context, ConstantData().errorColor);
+    (_isEmailValid && _isFeedbackNotEmpty)
+        ? setState(() => _sendIconColor = Colors.black)
+        : setState(() => _sendIconColor = Colors.grey);
+  }
+
+  void _invalidateHandleTap() {
+    FocusNode _focus;
+    if (_isCursorDirty && !_isEmailValid) {
+      _focus = _emailFocus;
+      _isFeedbackDirty = false;
+      Catalog().showWarningDialog(context, _warning, override: true);
+    } else {
+      _focus = _feedbackFocus;
+      _isFeedbackDirty = true;
+      Catalog().showWarningDialog(
+        context,
+        LocalizationData.of(context, Tag.feedback10),
+        override: true,
+      );
+    }
+    Catalog()._cursorColor(context, ConstantData().errorColor);
+    if (_focus.hasFocus) _focus.unfocus();
+    FocusScope.of(context).requestFocus(_focus);
+  }
+
+  void _validateHandleTap() {
+    _onBackPressed();
+  }
 
   @override
   void dispose() {
-    _feedbackFocus.removeListener(_sendIconColorChange);
+    _emailController.removeListener(
+      () => _validateEmail(_emailController.text),
+    );
+    _emailController.removeListener(_cursorSendIconColor);
+    _feedbackController.removeListener(_cursorSendIconColor);
     _emailController.dispose();
     _feedbackController.dispose();
     _emailFocus.dispose();
@@ -580,426 +1151,58 @@ class _FeedbackWidgetIOSState extends State<_FeedbackWidgetIOS> {
   @override
   void initState() {
     super.initState();
-    _feedbackController.addListener(_sendIconColorChange);
-  }
-
-  _sendIconColorChange() {
-    if (_feedbackController.text.trim().isNotEmpty) {
-//      Catalog()._setCursorColor(context, Catalog().defaultColor);
-      setState(() {
-        _sendIconColor = MaterialColor(
-          0xFF000000,
-          <int, Color>{900: Color(0xFF000000)},
-        );
-      });
-    } else {
-      if (_feedbackFocus.hasFocus && _i > 0) {
-//        Catalog()._setCursorColor(context, Catalog().errorColor);
-      } else {
-//        Catalog()._setCursorColor(context, Catalog().defaultColor);
-      }
-      setState(() {
-        _sendIconColor = Colors.grey;
-      });
-    }
-  }
-
-  String _validateEmail(String email) {
-    final String _quotePattern = '^(\"|\“)([^"“”])+(\"|\”)@';
-    bool _validate = true;
-
-//    if (email.length < 254) {
-//      _validate = true;
-//    }
-
-    for (int i = 0; i < email.length; i++) {
-      int comparePos = i++;
-      if (comparePos >= email.length) {
-        break;
-      }
-      if (email[i] == '@') {
-        if (email.substring(i).contains('"') ||
-            email.substring(i).contains('“') ||
-            email.substring(i).contains('”')) {
-          _validate = false;
-          break;
-        }
-      }
-      if (email[i] == email[comparePos] &&
-          email[i].contains('.') &&
-          email[comparePos].contains('.')) {
-        _validate = false;
-      }
-    }
-
-    String _emailPattern = '';
-//        '^(?!\.)(?!.*\.\.)(?!.*\.\$)*' +
-//        '(((^\(([^@()[\]\\;:",<> ])*\))|' +
-//        '(\(([^@()[\]\\;:",<> ])*\)@)|' +
-//        '(^\"([^"\\]|\\["\\])*\")|' +
-//        '[^@()[\]\\;:",<> ]|' +
-//        '(?:\.[^@()[\]\\;:",<> ])){0,64}@' +
-//        '((?!\-)(?!\-*\-\$)*' +
-//        '((\(([^@()[\]\\;:",<> ])*\))*' +
-//        '((((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])*\.)*(?:[a-z]*))|' +
-//        '([^\w@()[\]\\;:",<> ]*))(\(([^@()[\]\\;:",<> ])*\))*\$)|' +
-//        '(\[([\w\d:.])*\]\$)))){0,254}\$';
-//
-//        "[a-zA-Z0-9\+\.\_\%\-\+]{1,256}" +
-//        "\\@" +
-//        "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
-//        "(" +
-//        "\\." +
-//        "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
-//        ")+";
-//
-//   pattern checking sample emails
-//    -- pass --
-//    simple@example.com
-//    สมรัก@จดหมาย.ไทย
-//    very.common@example.com
-//    ยอด.รัก@จดหมาย.ไทย
-//    john.doe@example.com
-//    disposable.style.email.with+symbol@example.com
-//    other.email-with-hyphen@example.com
-//    fully-qualified-domain@example.com
-//    user.name+tag+sorting@example.com
-//    (may go to user.name@example.com inbox depending on mail server)
-//    x@example.com (one-letter local-part)
-//    example-indeed@strange-example.com
-//    #!$%&'*+-/=?^_`{}|~@example.org
-//    example@s.example (see the List of Internet top-level domains)
-//    user@[2001:DB8::1]
-//    jsmith@[192.168.2.1]
-//    jsmith@[IPv6:2001:db8::1]
-//    " "@example.org
-//    "John..Doe"@example.com
-//    "John...Doe"@example.com
-//    "John....Doe"@example.com
-//    ".JohnDoe"@example.com
-//    "..JohnDoe"@example.com
-//    "...JohnDoe"@example.com
-//    "....JohnDoe"@example.com
-//    "JohnDoe."@example.com
-//    "JohnDoe.."@example.com
-//    "JohnDoe..."@example.com
-//    "JohnDoe...."@example.com
-//    john.smith(comment)@example.com
-//    (comment)john.smith@example.com
-//    john.smith@(comment)example.com
-//    john.smith@example.com(comment)
-//    "Abc@def"@example.com
-//    "Fred Bloggs"@example.com
-//    customer/department=shipping@example.com
-//    $A12345@example.com
-//    !def!xyz%abc@example.com
-//    _somename@example.com
-
-//    -- not pass --
-//    admin@mailserver1
-//    (local domain name with no TLD,
-//    although ICANN highly discourages dotless email addresses)
-//    "very.(),:;<>[]\".VERY.\"very@\\ \"very\".unusual"@strange.example.com
-//    "()<>[]:,;@\\\"!#$%&'-/=?^_`{}| ~.a"@example.org
-//    Abc.example.com (no @ character)
-//    A@b@c@example.com (only one @ is allowed outside quotation marks)
-//    Abc\@def@example.com
-//    a"b(c)d,e:f;g<h>i[j\k]l@example.com
-//    (none of the special characters in this local-part are allowed outside quotation marks)
-//    just"not"right@example.com
-//    (quoted strings must be dot separated or the only element making up the local-part)
-//    this is"not\allowed@example.com
-//    (spaces, quotes, and backslashes may only exist when within quoted strings
-//    and preceded by a backslash)
-//    this\ still\"not\\allowed@example.com
-//    (even if escaped (preceded by a backslash), spaces, quotes, and
-//    backslashes must still be contained by quotes)
-//    Fred\ Bloggs@example.com
-//    Joe.\\Blow@example.com
-//    1234567890123456789012345678901234567890123456789012345678901234+x@example.com
-//    (local part is longer than 64 characters)
-//    .john.doe@example.com
-//    ..john.doe@example.com
-//    ...john.doe@example.com
-//    ....john.doe@example.com
-//    john..doe@example.com (double dot before @)
-//    john...doe@example.com (n dot before @)
-//    john....doe@example.com (n dot before @)
-//    john.doe.@example.com
-//    john.doe..@example.com
-//    john.doe...@example.com
-//    john.doe....@example.com
-//    john.doe@.example.com
-//    john.doe@..example.com
-//    john.doe@...example.com
-//    john.doe@....example.com
-//    john.doe@example..com (double dot after @)
-//    john.doe@example...com (n dot after @)
-//    john.doe@example....com (n dot after @)
-//    john.doe@example.com.
-//    john.doe@example.com..
-//    john.doe@example.com...
-//    john.doe@example.com....
-//    ".JohnDoe@example.com
-//    "..JohnDoe@example.com
-//    "...JohnDoe@example.com
-//    "....JohnDoe@example.com
-//    "John.Doe@example.com
-//    "John..Doe@example.com
-//    "John...Doe@example.com
-//    "John....Doe@example.com
-//    "JohnDoe.@example.com
-//    "JohnDoe..@example.com
-//    "JohnDoe...@example.com
-//    "JohnDoe....@example.com
-//    .JohnDoe"@example.com
-//    ..JohnDoe"@example.com
-//    ...JohnDoe"@example.com
-//    ....JohnDoe"@example.com
-//    John.Doe"@example.com
-//    John..Doe"@example.com
-//    John...Doe"@example.com
-//    John....Doe"@example.com
-//    JohnDoe."@example.com
-//    JohnDoe.."@example.com
-//    JohnDoe..."@example.com
-//    JohnDoe...."@example.com
-
-//    if (RegExp(_emailPattern).hasMatch(email)) return null;
-    if (_validate) return null;
-    return 'Your address is invalid.';
-  }
-
-  // https://www.freecodecamp.org/forum/t/how-to-validate-forms-and-
-  // user-input-the-easy-way-using-flutter/190377
-  void _optionalValidateEmail(String email) {
-    if (_validateEmail(email) == null) {
-      _warning = null;
-//      Catalog()._setCursorColor(context, Catalog().defaultColor);
-      if ((email.substring(0, email.indexOf('@')).length > 32) ||
-          (email.substring(email.indexOf('@')).length > 32)) {
-        _note =
-            'Your address maybe too long.\nPlease consider using another address.';
-      } else {
-        _note = null;
-      }
-      _emailFocus.unfocus();
-      FocusScope.of(context).requestFocus(_feedbackFocus);
-    } else {
-      _warning = _validateEmail(email);
-//      Catalog()._setCursorColor(context, Catalog().errorColor);
-    }
-  }
-
-  String _feedbackSubString(BuildContext context) {
-    String _feedback, _lang = Localizations.localeOf(context).languageCode;
-    (Platform.isIOS && _lang == 'en')
-        ? _feedback = LocalizationData.of(context, Tag.feedback).substring(5)
-        : _feedback = LocalizationData.of(context, Tag.feedback);
-    return _feedback;
-  }
-
-  void _invalidateHandleTap() {
-    bool _a = _emailController.text.trim().isEmpty,
-        _b = _feedbackController.text.trim().isEmpty;
-    FocusNode _focus;
-    String _text;
-    if (_a || _b) {
-      if (_a) {
-        _focus = _emailFocus;
-        _text = LocalizationData.of(context, Tag.feedback7);
-      } else if (_b) {
-        _focus = _feedbackFocus;
-        _text = LocalizationData.of(context, Tag.feedback8);
-      }
-//      Catalog().showWarningDialog(context, _text, override: true);
-//      Catalog()._setCursorColor(context, Catalog().errorColor);
-      FocusScope.of(context).requestFocus(_focus);
-    } else {
-//      Catalog()._setCursorColor(context, Catalog().defaultColor);
-    }
-
-//    if (_feedbackController.text.trim().isNotEmpty) {
-//    } else {
-//      Catalog().showWarningDialog(context, _text, override: true);
-//
-////      if (_feedbackFocus.hasFocus && _i > 0) {
-////        Catalog().setCursorColor(context, Catalog().errorColor);
-////      } else {
-////        Catalog().setCursorColor(context, Catalog().defaultColor);
-////      }
-//    }
+    _emailController.addListener(() => _validateEmail(_emailController.text));
+    _emailController.addListener(_cursorSendIconColor);
+    _feedbackController.addListener(_cursorSendIconColor);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        actions: <Widget>[
-          Builder(
-            // Create an inner BuildContext so that the onPressed method
-            // can refer to the Scaffold with Scaffold.of().
-            builder: (BuildContext context) {
-              return IconButton(
-                color: _sendIconColor,
-                icon: Icon(Icons.send),
-                onPressed: () {
-                  if (_formKey.currentState.validate()) {
-                    Scaffold.of(context).showSnackBar(
-                        SnackBar(content: Text('Processing Data')));
-                  } else {
-                    _i++;
-                    _invalidateHandleTap();
-                  }
-                },
+    return WillPopScope(
+      child: Scaffold(
+        appBar: AppBar(
+          actions: <Widget>[
+            IconButton(
+              color: _sendIconColor,
+              icon: Icon(Icons.send),
+              onPressed: () {
+                (_isEmailValid && _formKey.currentState.validate())
+                    ? _validateHandleTap()
+                    : _invalidateHandleTap();
+              },
+              tooltip: LocalizationData.of(context, Tag.tooltip2),
+            ),
+          ],
+          title: Text(_feedbackSubString(context)),
+        ),
+        body: Form(
+          child: LayoutBuilder(
+            builder: (_, scrollableConstraints) {
+              return Scrollbar(
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: <Widget>[
+                          _FeedbackFieldIOS(this),
+                          _FeedbackScreenshotIOS(this, _image),
+                        ],
+                        mainAxisSize: MainAxisSize.min,
+                      ),
+                    ),
+                    constraints: BoxConstraints(
+                      minHeight: scrollableConstraints.maxHeight,
+                    ),
+                  ),
+                ),
               );
             },
           ),
-        ],
-        leading: IconButton(
-          icon: Catalog()._createBackIcon(),
-          onPressed: () {
-//            Catalog()._setCursorColor(context, Catalog().defaultColor);
-            Navigator.of(context).maybePop();
-          },
+          key: _formKey,
         ),
-//        elevation: (!Platform.isIOS) ? null : 0.5,
-        title: Text(_feedbackSubString(context)),
+        bottomNavigationBar: _FeedbackNoteIOS(),
       ),
-      body: Form(
-        child: LayoutBuilder(
-          builder: (
-            BuildContext context,
-            BoxConstraints scrollableConstraints,
-          ) {
-            return Scrollbar(
-              child: SingleChildScrollView(
-                child: ConstrainedBox(
-                  child: IntrinsicHeight(
-                    child: Column(
-                      children: <Widget>[
-                        Flexible(
-                          child: Column(
-                            children: <Widget>[
-                              Padding(
-                                child: Stack(
-                                  children: <Widget>[
-                                    Container(
-                                      child: Text(
-                                        LocalizationData.of(
-                                            context, Tag.feedback0),
-                                        style: TextStyle(
-                                          color: Colors.black54,
-                                          fontSize: 14.5,
-                                          letterSpacing: -0.5,
-                                        ),
-                                      ),
-                                      padding: EdgeInsets.only(top: 7.5),
-                                    ),
-                                    Container(
-                                      child: Row(
-                                        children: <Widget>[
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller: _emailController,
-                                              decoration: InputDecoration(
-                                                border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                        horizontal: 5.0,
-                                                        vertical: 7.5),
-                                                errorText: _warning,
-                                                helperText: _note,
-                                                hintStyle: TextStyle(
-                                                  color: Colors.black26,
-                                                  letterSpacing: -0.5,
-                                                ),
-                                                hintText: LocalizationData.of(
-                                                    context, Tag.feedback1),
-                                              ),
-                                              focusNode: _emailFocus,
-                                              keyboardType:
-                                                  TextInputType.emailAddress,
-                                              maxLines: null,
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 14.5),
-                                              textInputAction:
-                                                  TextInputAction.next,
-                                              validator: _validateEmail,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      padding: EdgeInsets.only(left: 55.0),
-                                    ),
-                                  ],
-                                ),
-                                padding: EdgeInsets.only(
-                                  left: 20.0,
-                                  top: 10.15,
-                                  right: 20.0,
-                                  bottom: 0.0,
-                                ), //.all(20.0),
-                              ),
-                              Padding(
-                                child: Divider(
-                                    color: Color(0xFFBCBBC1), height: 0.0),
-                                padding: EdgeInsets.only(top: 11.25),
-                              ),
-                              Padding(
-                                child: TextFormField(
-                                  controller: _feedbackController,
-                                  decoration: InputDecoration(
-                                    border: InputBorder.none,
-                                    contentPadding:
-                                        EdgeInsets.symmetric(vertical: 7.5),
-//                  focusedBorder: UnderlineInputBorder(
-//                    borderSide: BorderSide(color: Colors.black54),
-//                  ),
-                                    hintStyle: TextStyle(
-                                      color: Colors.black54,
-                                      letterSpacing: -0.5,
-                                    ),
-                                    hintText: LocalizationData.of(
-                                        context, Tag.feedback2),
-                                  ),
-                                  focusNode: _feedbackFocus,
-                                  keyboardType: TextInputType.multiline,
-                                  maxLines: null,
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16.5,
-                                  ),
-//                style: TextStyle(color: Colors.black, fontSize: 20.0),
-                                  textInputAction: TextInputAction.done,
-                                  validator: (value) {
-                                    if (value.isEmpty) return '';
-                                  },
-                                ),
-                                padding: EdgeInsets.only(
-                                    left: 20.0, right: 20.0, top: 8.32),
-                              ),
-                            ],
-                          ),
-                          flex: 0,
-                        ),
-                        _FeedbackScreenshotIOS(this, image),
-                      ],
-                      mainAxisSize: MainAxisSize.min,
-                    ),
-                  ),
-                  constraints: BoxConstraints(
-                    minHeight: scrollableConstraints.maxHeight,
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-        key: _formKey,
-      ),
-      bottomNavigationBar: _FeedbackNoteIOS(),
+      onWillPop: () => _onBackPressed(),
     );
   }
 }
@@ -1127,8 +1330,7 @@ class _RippleCardEffect extends StatelessWidget {
                 : Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          Provider().passData(_message, _category),
+                      builder: (_) => Provider().passData(_message, _category),
                     ),
                   );
           },
@@ -1225,8 +1427,9 @@ class _SearchAlertDialog extends StatelessWidget {
             _content +
             LocalizationData.of(context, Tag.search2),
       ),
-      title: Text('${LocalizationData.of(context, Tag.search0)}'
-          ' \“$_content\”?'),
+      title: Text(
+        '${LocalizationData.of(context, Tag.search0)} \“$_content\”?',
+      ),
     );
   }
 }
@@ -1235,24 +1438,64 @@ class _SearchListTile extends StatelessWidget {
   _SearchListTile(String icon, String title)
       : _icon = icon,
         _title = title;
+  _SearchListTile.override()
+      : _icon = '',
+        _title = '';
 
   final String _icon, _title;
-  static String _category;
+  static List<Widget> _finalList = [];
+  static String _category, _content;
+  static var _parent;
 
-  void _handleTap(BuildContext context) {
+  _searchListTileStaticList() async {
+    var _list = List<Widget>();
     switch (_category) {
       case ConstantData.eating:
       case ConstantData.going:
-        _launchAppIOS(context, ConstantData().gmapsUrl);
+        _content = ConstantData().gmapsUrl;
+        _list = [
+          _SearchListTile(ConstantData().gmapsIcon, ConstantData.gmaps),
+          _SearchListTile(ConstantData().amapsIcon, ConstantData.amaps),
+          _SearchListTile(ConstantData().chromeIcon, ConstantData.chrome),
+        ];
+        if (!await canLaunch(ConstantData().gmapsApp)) {
+          _list.add(
+            _SearchListTile(ConstantData().safariIcon, ConstantData.safari),
+          );
+        }
         break;
       case ConstantData.listening:
       case ConstantData.watching:
-        _launchAppIOS(context, ConstantData().youtubeUrl);
+        _content = ConstantData().youtubeUrl;
+        _list = [
+          _SearchListTile(ConstantData().youtubeIcon, ConstantData.youtube),
+          _SearchListTile(ConstantData().chromeIcon, ConstantData.chrome),
+        ];
+        if (!await canLaunch(ConstantData().youtubeApp)) {
+          _list.add(
+            _SearchListTile(ConstantData().safariIcon, ConstantData.safari),
+          );
+        }
         break;
     }
+    _finalList = _list;
   }
 
-  void _launchAppIOS(BuildContext context, String content) async {
+  List<Widget> _searchListTileDynamicList() {
+    Timer(
+      Duration(microseconds: 1),
+      () {
+        if (_parent.mounted) {
+          _parent.setState(() {
+            _searchListTileStaticList();
+          });
+        }
+      },
+    );
+    return _finalList;
+  }
+
+  void _launchAppIOS(BuildContext context) async {
     String _path = Uri.encodeFull(_query);
     switch (_title) {
       case ConstantData.amaps:
@@ -1270,7 +1513,7 @@ class _SearchListTile extends StatelessWidget {
         (await canLaunch(ConstantData().chromeApp))
             ? _launchUrl(
                 context,
-                ConstantData().chromeApp + content.substring(8) + _path,
+                ConstantData().chromeApp + _content.substring(8) + _path,
               )
             : Catalog()._showAlertErrorDialog(
                 context,
@@ -1278,23 +1521,7 @@ class _SearchListTile extends StatelessWidget {
               );
         break;
       case ConstantData.safari:
-        if (await canLaunch(ConstantData().gmapsApp) &&
-            content == ConstantData().gmapsUrl) {
-          _showSnackBar(context, ConstantData.gmaps);
-          Timer(
-            Duration(milliseconds: 1000),
-            () => _launchUrl(context, content + _path),
-          );
-        } else if (await canLaunch(ConstantData().youtubeApp) &&
-            content == ConstantData().youtubeUrl) {
-          _showSnackBar(context, ConstantData.youtube);
-          Timer(
-            Duration(milliseconds: 1000),
-            () => _launchUrl(context, content + _path),
-          );
-        } else {
-          _launchUrl(context, content + _path);
-        }
+        _launchUrl(context, _content + _path);
         break;
       case ConstantData.youtube:
         (await canLaunch(ConstantData().youtubeApp))
@@ -1311,33 +1538,6 @@ class _SearchListTile extends StatelessWidget {
     (await canLaunch(url))
         ? await launch(url, forceSafariVC: false)
         : Catalog()._showAlertErrorDialog(context, url, false);
-  }
-
-  void _showSnackBar(BuildContext context, String content) {
-    var _snackBar = SnackBar(
-      backgroundColor: Colors.white,
-      content: Row(
-        children: <Widget>[
-          Card(
-            child: Padding(
-              child: Text(
-                LocalizationData.of(context, Tag.search4) + content,
-                style: TextStyle(color: Colors.black),
-              ),
-              padding: EdgeInsets.all(15.0),
-            ),
-            color: Colors.white,
-            elevation: 0.5,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(38.0),
-              side: BorderSide(color: Colors.blue, width: 2.0),
-            ),
-          ),
-        ],
-        mainAxisAlignment: MainAxisAlignment.center,
-      ),
-    );
-    Scaffold.of(context).showSnackBar(_snackBar);
   }
 
   @override
@@ -1364,7 +1564,7 @@ class _SearchListTile extends StatelessWidget {
                 Container(height: 7.0),
               ],
             ),
-            onTap: () => _handleTap(context),
+            onTap: () => _launchAppIOS(context),
             splashColor: Colors.transparent,
           ),
           type: MaterialType.transparency,
@@ -1410,7 +1610,7 @@ class _SystemInfoListTileState extends State<_SystemInfoListTile> {
 
   static List _systemInfoStaticList(BuildContext context) {
     var _items = List(), _tags = List();
-    _getStaticInfo(context);
+    _staticInfo(context);
     _dateTime = Provider().fetchDateTime(context);
     for (int _i = 0; _i < Tag.values.length; _i++) {
       for (int _j = 0; _j < 9; _j++) {
@@ -1419,7 +1619,6 @@ class _SystemInfoListTileState extends State<_SystemInfoListTile> {
       }
     }
     for (int _i = 0; _i < _tags.length * 2; _i++) {
-      int _j = _i ~/ 2;
       String _text;
       switch (_i) {
         case 1:
@@ -1450,7 +1649,7 @@ class _SystemInfoListTileState extends State<_SystemInfoListTile> {
           _text = Platform.localeName.replaceAll('_', '-');
           break;
         default:
-          _text = LocalizationData.of(context, _tags[_j]);
+          _text = LocalizationData.of(context, _tags[_i ~/ 2]);
           break;
       }
       _items.add(_text);
@@ -1458,26 +1657,26 @@ class _SystemInfoListTileState extends State<_SystemInfoListTile> {
     return _items;
   }
 
-  static void _getStaticInfo(BuildContext context) async {
+  static void _staticInfo(BuildContext context) async {
+    PackageInfo _packageInfo = await PackageInfo.fromPlatform();
     var _battery = Battery(), _deviceInfo = DeviceInfoPlugin();
-    (!Platform.isIOS)
-        ? _deviceInfo.androidInfo.then((info) {
-            _deviceModel = info.model;
-            _deviceOSVersion = info.version.release;
-          })
-        : _deviceInfo.iosInfo.then((info) {
-            _deviceModel = info.utsname.machine;
-            _deviceOSVersion = info.systemVersion;
-          });
-    PackageInfo.fromPlatform().then((info) {
-      _appName = info.appName;
-      _appIdentifier = info.packageName;
-      _appVersion = info.version;
-    });
-    _battery.batteryLevel.then(
-      (level) => _batteryLevel = level.toString(),
-      onError: (error) {},
-    );
+    if (!Platform.isIOS) {
+      AndroidDeviceInfo _androidInfo = await _deviceInfo.androidInfo;
+      _deviceModel = _androidInfo.model;
+      _deviceOSVersion = _androidInfo.version.release;
+    } else {
+      IosDeviceInfo _iosInfo = await _deviceInfo.iosInfo;
+      _deviceModel = _iosInfo.utsname.machine;
+      _deviceOSVersion = _iosInfo.systemVersion;
+    }
+    _appName = _packageInfo.appName;
+    _appIdentifier = _packageInfo.packageName;
+    _appVersion = _packageInfo.version;
+    try {
+      int _level = await _battery.batteryLevel;
+      _batteryLevel = _level.toString();
+    } on Exception {}
+    // Below method cannot use await keyword.
     _battery.onBatteryStateChanged.listen(
       (state) {
         switch (state) {
@@ -1492,13 +1691,13 @@ class _SystemInfoListTileState extends State<_SystemInfoListTile> {
             break;
         }
       },
-      onError: (error) {},
+      onError: (_) {},
     );
   }
 
   List _systemInfoDynamicList(BuildContext context) {
     Timer(
-      Duration(milliseconds: 500),
+      Duration(seconds: 1),
       () => ((mounted) ? setState(() {}) : {}),
     );
     return _systemInfoStaticList(context);

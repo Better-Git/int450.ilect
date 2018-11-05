@@ -69,6 +69,10 @@ class ConstantData {
       tileColor = Color(0xFFF5F5F5);
   final Pattern
       // Regular expressions
+      nonDomainPattern = RegExp(r'[\x00-\x40\x5B-\x60\x7B-\x7F]+'),
+      nonLocalPattern = RegExp(r'[ \"(),.:;<>@[\\\]]+'),
+      nonSubDomainPattern =
+          RegExp(r'[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+'),
       thaiPattern = RegExp(r'[ก-๙]');
   final String
       // Application title
@@ -88,6 +92,8 @@ class ConstantData {
       gmapsAppStoreUrl =
           'https://itunes.apple.com/us/app/google-maps-transit-food/id585027354?mt=8',
       gmapsUrl = 'https://www.google.com/maps/search/',
+      ilectAppStoreUrl = 'https://itunes.apple.com/us/app/',
+      ilectPlayStoreUrl = 'https://play.google.com/store/apps/details?id=',
       testUrl = 'youtu.be',
       youtubeAppStoreUrl =
           'https://itunes.apple.com/us/app/youtube-watch-listen-stream/id544007664?mt=8',
@@ -143,10 +149,16 @@ class ConstantData {
       errorDialogTitle0TH = 'ข้อผิดพลาด',
       errorDialogTitle1 = 'No Internet Connection',
       errorDialogTitle1TH = 'ไม่มีการเชื่อมต่ออินเทอร์เน็ต',
-      feedbackDialog0 = '',
-      feedbackDialog0TH = '',
-      feedbackDialog1 = 'Write your feedback before sending',
-      feedbackDialog1TH = 'โปรดเขียนความคิดเห็นก่อนส่ง',
+      feedbackDialog0 = 'Your address is invalid.',
+      feedbackDialog0TH = 'ที่อยู่อีเมลของคุณไม่ถูกต้อง',
+      feedbackDialog1 = 'Invalid public IP address.',
+      feedbackDialog1TH = 'ที่อยู่ไอพีสาธารณะไม่ถูกต้อง',
+      feedbackDialog2 = 'Write your feedback before sending',
+      feedbackDialog2TH = 'โปรดเขียนความคิดเห็นก่อนส่ง',
+      feedbackHelper = 'Your address maybe too long.\n'
+          'Please consider using another address.',
+      feedbackHelperTH = 'ที่อยู่อีเมลของคุณอาจยาวเกินไป\n'
+          'โปรดพิจารณาใช้ที่อยู่อื่นแทน',
       feedbackNote0 =
           'In addition to account info or screenshot whether or not you provide. Some ',
       feedbackNote0TH =
@@ -167,6 +179,8 @@ class ConstantData {
       feedbackPage2TH = 'เขียนความคิดเห็นของคุณ',
       feedbackPage3 = 'Screenshot',
       feedbackPage3TH = 'ภาพหน้าจอ',
+      feedbackTooltip = 'Send',
+      feedbackTooltipTH = 'ส่ง',
       firebaseSlash = '%2F',
       firebaseToken = '?alt=media&token=',
       objectToast = 'Open ',
@@ -184,8 +198,11 @@ class ConstantData {
       searchAlertDialogTitleTH = 'รับ',
       searchSnackBar = 'Redirect to ',
       searchSnackBarTH = 'กำลังเปิดไปยัง ',
-      share =
-          'ฉันได้ใช้แอป iLect แล้วนะ\nอยากจะให้เพื่อนๆมาลองใช้กัน\n\nดาวน์โหลดได้ที่ ...',
+      share0 = 'I\'ve used the iLect app and I want everyone to try it.\n\n'
+          'Download now at\nApp Store\n',
+      share0TH = 'ฉันได้ใช้แอป iLect แล้วนะ อยากจะให้เพื่อนๆมาลองใช้กัน\n\n'
+          'ดาวน์โหลดได้แล้วที่\nApp Store\n',
+      share1 = '\nGoogle Play Store\n',
       sysinfoListTileTitle0 = 'Device model',
       sysinfoListTileTitle0TH = 'รุ่นของอุปกรณ์',
       sysinfoListTileTitle1 = 'OS version',
@@ -238,13 +255,15 @@ class LocalizationData {
           ? ConstantData().feedbackPage0
           : ConstantData().feedbackPage0IOS,
       Tag.feedback1: ConstantData().feedbackPage1,
-      Tag.feedback2: ConstantData().feedbackPage2,
-      Tag.feedback3: ConstantData().feedbackPage3,
-      Tag.feedback4: ConstantData().feedbackNote0,
-      Tag.feedback5: ConstantData().feedbackNote1,
-      Tag.feedback6: ConstantData().feedbackNote2,
-      Tag.feedback7: ConstantData().feedbackDialog0,
-      Tag.feedback8: ConstantData().feedbackDialog1,
+      Tag.feedback2: ConstantData().feedbackHelper,
+      Tag.feedback3: ConstantData().feedbackPage2,
+      Tag.feedback4: ConstantData().feedbackPage3,
+      Tag.feedback5: ConstantData().feedbackNote0,
+      Tag.feedback6: ConstantData().feedbackNote1,
+      Tag.feedback7: ConstantData().feedbackNote2,
+      Tag.feedback8: ConstantData().feedbackDialog0,
+      Tag.feedback9: ConstantData().feedbackDialog1,
+      Tag.feedback10: ConstantData().feedbackDialog2,
       Tag.formatDate: ConstantData().dateFormat,
       Tag.formatTime: ConstantData().timeFormat,
       Tag.privacy: ConstantData().privacy,
@@ -255,6 +274,10 @@ class LocalizationData {
       Tag.search3: ConstantData().searchAlertButton,
       Tag.search4: ConstantData().searchSnackBar,
       Tag.service: ConstantData().service,
+      Tag.share: ConstantData().share0 +
+          ConstantData().ilectAppStoreUrl +
+          ConstantData().share1 +
+          ConstantData().ilectPlayStoreUrl,
       Tag.sysinfo: ConstantData().sysinfo,
       Tag.sysinfo0: ConstantData().sysinfoListTileTitle0,
       Tag.sysinfo1: ConstantData().sysinfoListTileTitle1,
@@ -268,6 +291,7 @@ class LocalizationData {
       Tag.toast: ConstantData().objectToast,
       Tag.tooltip0: ConstantData().bottomAppBarTooltip0,
       Tag.tooltip1: ConstantData().bottomAppBarTooltip1,
+      Tag.tooltip2: ConstantData().feedbackTooltip,
       Tag.warning0: ConstantData().errorDialogTitle1,
       Tag.warning1: ConstantData().title + ConstantData().errorDialog1,
       Tag.warning2: ConstantData().errorDialog2,
@@ -283,13 +307,15 @@ class LocalizationData {
       Tag.feedback: ConstantData().feedbackTH,
       Tag.feedback0: ConstantData().feedbackPage0TH,
       Tag.feedback1: ConstantData().feedbackPage1TH,
-      Tag.feedback2: ConstantData().feedbackPage2TH,
-      Tag.feedback3: ConstantData().feedbackPage3TH,
-      Tag.feedback4: ConstantData().feedbackNote0TH,
-      Tag.feedback5: ConstantData().feedbackNote1TH,
-      Tag.feedback6: ConstantData().feedbackNote2TH,
-      Tag.feedback7: ConstantData().feedbackDialog0TH,
-      Tag.feedback8: ConstantData().feedbackDialog1TH,
+      Tag.feedback2: ConstantData().feedbackHelperTH,
+      Tag.feedback3: ConstantData().feedbackPage2TH,
+      Tag.feedback4: ConstantData().feedbackPage3TH,
+      Tag.feedback5: ConstantData().feedbackNote0TH,
+      Tag.feedback6: ConstantData().feedbackNote1TH,
+      Tag.feedback7: ConstantData().feedbackNote2TH,
+      Tag.feedback8: ConstantData().feedbackDialog0TH,
+      Tag.feedback9: ConstantData().feedbackDialog1TH,
+      Tag.feedback10: ConstantData().feedbackDialog2TH,
       Tag.formatDate: ConstantData().dateFormatTH,
       Tag.formatTime: ConstantData().timeFormatTH,
       Tag.privacy: ConstantData().privacyTH,
@@ -300,6 +326,10 @@ class LocalizationData {
       Tag.search3: ConstantData().searchAlertButtonTH,
       Tag.search4: ConstantData().searchSnackBarTH,
       Tag.service: ConstantData().serviceTH,
+      Tag.share: ConstantData().share0TH +
+          ConstantData().ilectAppStoreUrl +
+          ConstantData().share1 +
+          ConstantData().ilectPlayStoreUrl,
       Tag.sysinfo: ConstantData().sysinfoTH,
       Tag.sysinfo0: ConstantData().sysinfoListTileTitle0TH,
       Tag.sysinfo1: ConstantData().sysinfoListTileTitle1TH,
@@ -313,6 +343,7 @@ class LocalizationData {
       Tag.toast: ConstantData().objectToastTH,
       Tag.tooltip0: ConstantData().bottomAppBarTooltip0TH,
       Tag.tooltip1: ConstantData().bottomAppBarTooltip1TH,
+      Tag.tooltip2: ConstantData().feedbackTooltipTH,
       Tag.warning0: ConstantData().errorDialogTitle1TH,
       Tag.warning1: ConstantData().title + ConstantData().errorDialog1TH,
       Tag.warning2: ConstantData().errorDialog2TH,
@@ -343,6 +374,8 @@ enum Tag {
   feedback6,
   feedback7,
   feedback8,
+  feedback9,
+  feedback10,
   formatDate,
   formatTime,
   privacy,
@@ -353,6 +386,7 @@ enum Tag {
   search3,
   search4,
   service,
+  share,
   sysinfo,
   sysinfo0,
   sysinfo1,
@@ -366,6 +400,7 @@ enum Tag {
   toast,
   tooltip0,
   tooltip1,
+  tooltip2,
   warning0,
   warning1,
   warning2,
@@ -391,25 +426,6 @@ class Provider {
   bool isEN(BuildContext context) =>
       Localizations.localeOf(context).languageCode.contains('en');
 
-//  bool isConnected() {
-//    try {
-//      var _result = checkInternetBase();
-//      _result.then((val) {
-//        String _res = val[0].rawAddress.join('.');
-//        if (_res.trim().isNotEmpty) {
-//          return true;
-//        }
-//      });
-//    } on Exception {
-//      return false;
-//    }
-//    return false;
-//  }
-//
-//  checkInternetBase() async =>
-//      await InternetAddress.lookup(ConstantData().testUrl)
-//          .timeout(Duration(seconds: 2));
-
   StatefulWidget passData(String message, [String category]) {
     return (category == null || category.trim().isEmpty)
         ? SecondPage(category: message)
@@ -428,7 +444,7 @@ class Provider {
       ConstantData().firebaseSlash,
       cardData.pic,
       ConstantData().firebaseToken,
-      cardData.token
+      cardData.token,
     ].join();
   }
 
@@ -489,13 +505,13 @@ class Provider {
 
 class ProviderThemeData {
   ProviderThemeData([this._color]) {
-    _setTheme();
+    _theme();
   }
 
   Color _color = ConstantData().defaultColor;
   ThemeData theme;
 
-  void _setTheme() {
+  void _theme() {
     theme = ThemeData(
       cursorColor: _color,
       primaryColor: Color(0xFFFFFFFF),
