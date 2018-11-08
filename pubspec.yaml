@@ -7,7 +7,7 @@ description: A new augmentative and alternative communication (AAC) application.
 # Both the version and the builder number may be overridden in flutter
 # build by specifying --build-name and --build-number, respectively.
 # Read more about versioning at semver.org.
-version: 0.7.0
+version: 0.8.0
 
 environment:
   sdk: ">=2.0.0-dev.68.0 <3.0.0"
@@ -30,6 +30,8 @@ dependencies:
 
   device_info: ^0.2.1
   firebase_database: ^1.0.4
+  firebase_storage: ^1.0.4
+  flutter_statusbar_manager: ^1.0.2
   fluttertoast: ^2.0.8
   image_picker: ^0.4.10
   package_info: ^0.3.2

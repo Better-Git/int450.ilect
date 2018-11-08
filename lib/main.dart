@@ -1,4 +1,4 @@
-import 'dart:async' show StreamSubscription;
+import 'dart:async' show StreamSubscription, Timer;
 
 import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:firebase_database/firebase_database.dart' show Event;
@@ -26,6 +26,8 @@ class ILectApp extends StatelessWidget {
       SystemUiOverlayStyle.dark.copyWith(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
     return DynamicTheme(
@@ -33,6 +35,7 @@ class ILectApp extends StatelessWidget {
       themedWidgetBuilder: (_, theme) {
         return MaterialApp(
           builder: (_, widget) => Theme(child: widget, data: theme),
+          debugShowCheckedModeBanner: false,
           home: HomePage(title: ConstantData().title),
           localizationsDelegates: [
             LocalizationsDataDelegate(),
@@ -64,6 +67,7 @@ class HomePage extends StatefulWidget {
 
   // Fields in a Widget subclass are always marked "final".
   final String title;
+  static bool canShowSnackBar = false;
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -133,6 +137,7 @@ class ThirdPage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   StreamSubscription<Event> _onIndexSubscription;
   var _items = List<CardData>();
 
@@ -166,6 +171,14 @@ class _HomePageState extends State<HomePage> {
   // than having to individually change instances of widgets.
   @override
   Widget build(BuildContext context) {
+    if (HomePage.canShowSnackBar) {
+      Timer(Duration(milliseconds: 500), () {
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(LocalizationData.of(context, Tag.snackbar)),
+        ));
+      });
+      HomePage.canShowSnackBar = false;
+    }
     return Scaffold(
       body: Scrollbar(
         child: GridView.count(
@@ -177,6 +190,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       bottomNavigationBar: Catalog().bottomAppBarOverride(widget.title),
+      key: _scaffoldKey,
     );
   }
 }

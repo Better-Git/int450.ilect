@@ -19,7 +19,7 @@ import 'package:flutter/material.dart'
         ThemeData;
 import 'package:intl/intl.dart' show DateFormat;
 
-import 'catalog.dart' show Catalog;
+import 'catalog.dart';
 import 'main.dart'
     show
         FeedbackPage,
@@ -70,7 +70,8 @@ class ConstantData {
   final Pattern
       // Regular expressions
       nonDomainPattern = RegExp(r'[\x00-\x40\x5B-\x60\x7B-\x7F]+'),
-      nonLocalPattern = RegExp(r'[ \"(),.:;<>@[\\\]]+'),
+      nonLocalWithDotPattern = RegExp(r'[ \"(),.:;<>@[\\\]]+'),
+      nonLocalWithoutDotPattern = RegExp(r'[ \"(),:;<>@[\\\]]+'),
       nonSubDomainPattern =
           RegExp(r'[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+'),
       thaiPattern = RegExp(r'[ก-๙]');
@@ -145,6 +146,9 @@ class ConstantData {
           'กรุณาเปิดไวไฟอีกครั้งหรือปิดโหมดเครื่องบิน',
       errorDialog3 = 'Please check your network settings and try again.',
       errorDialog3TH = 'โปรดตรวจสอบการตั้งค่าเครือข่ายและลองใหม่อีกครั้ง',
+      errorDialog4 = 'Unable to send the feedback. Please try again later.',
+      errorDialog4TH =
+          'ไม่สามารถส่งความคิดเห็นได้ โปรดลองใหม่อีกครั้งในภายหลัง',
       errorDialogTitle0 = 'Error',
       errorDialogTitle0TH = 'ข้อผิดพลาด',
       errorDialogTitle1 = 'No Internet Connection',
@@ -155,6 +159,24 @@ class ConstantData {
       feedbackDialog1TH = 'ที่อยู่ไอพีสาธารณะไม่ถูกต้อง',
       feedbackDialog2 = 'Write your feedback before sending',
       feedbackDialog2TH = 'โปรดเขียนความคิดเห็นก่อนส่ง',
+      feedbackDialog3 = 'There is an error occurred\n'
+          'between uploading process.\n\nPlease try again later.',
+      feedbackDialog3IOS = 'There is an error occurred '
+          'between the uploading process.\nPlease try again later.',
+      feedbackDialog3TH =
+          'เกิดข้อผิดพลาดขึ้นในระหว่าง\nการอัพโหลด\n\nโปรดลองใหม่อีกครั้งในภายหลัง',
+      feedbackDialog3THIOS =
+          'เกิดข้อผิดพลาดขึ้นในระหว่างการอัพโหลด โปรดลองใหม่อีกครั้งในภายหลัง',
+      feedbackDialog4 = 'Please wait...',
+      feedbackDialog4TH = 'กรุณารอสักครู่',
+      feedbackDialogTitle0 = 'Uploading',
+      feedbackDialogTitle0TH = 'กำลังอัพโหลด',
+      feedbackDialogTitle1 = 'Unable to upload',
+      feedbackDialogTitle1TH = 'ไม่สามารถอัพโหลดได้',
+      feedbackDialogTitle2 = 'Preparing',
+      feedbackDialogTitle2TH = 'กำลังเตรียมการ',
+      feedbackDialogTitle3 = 'Upload Successful',
+      feedbackDialogTitle3TH = 'อัพโหลดสำเร็จ',
       feedbackHelper = 'Your address maybe too long.\n'
           'Please consider using another address.',
       feedbackHelperTH = 'ที่อยู่อีเมลของคุณอาจยาวเกินไป\n'
@@ -183,6 +205,8 @@ class ConstantData {
       feedbackTooltipTH = 'ส่ง',
       firebaseSlash = '%2F',
       firebaseToken = '?alt=media&token=',
+      homeSnackBar = 'Thank you for the feedback',
+      homeSnackBarTH = 'ขอบคุณสำหรับความคิดเห็น',
       objectToast = 'Open ',
       objectToastTH = 'เปิด ',
       offline = 'Offline Pictures',
@@ -223,7 +247,7 @@ class ConstantData {
       sysinfoListTileTitle8TH = 'ภาษา',
       timeFormat = ' HH:mm:ss ',
       timeFormatTH = ' H นาฬิกา m นาที s วินาที ',
-      version = '0.7',
+      version = '0.8',
 
       // Page titles
       feedback = 'Send Feedback',
@@ -250,6 +274,7 @@ class LocalizationData {
       Tag.copyright: ConstantData().copyright,
       Tag.error0: ConstantData().errorDialogTitle0,
       Tag.error1: ConstantData().errorDialog0,
+      Tag.error2: ConstantData().errorDialog4,
       Tag.feedback: ConstantData().feedback,
       Tag.feedback0: (!Platform.isIOS)
           ? ConstantData().feedbackPage0
@@ -264,6 +289,14 @@ class LocalizationData {
       Tag.feedback8: ConstantData().feedbackDialog0,
       Tag.feedback9: ConstantData().feedbackDialog1,
       Tag.feedback10: ConstantData().feedbackDialog2,
+      Tag.feedback11: ConstantData().feedbackDialogTitle0,
+      Tag.feedback12: ConstantData().feedbackDialogTitle1,
+      Tag.feedback13: (!Platform.isIOS)
+          ? ConstantData().feedbackDialog3
+          : ConstantData().feedbackDialog3IOS,
+      Tag.feedback14: ConstantData().feedbackDialogTitle2,
+      Tag.feedback15: ConstantData().feedbackDialog4,
+      Tag.feedback16: ConstantData().feedbackDialogTitle3,
       Tag.formatDate: ConstantData().dateFormat,
       Tag.formatTime: ConstantData().timeFormat,
       Tag.privacy: ConstantData().privacy,
@@ -278,6 +311,7 @@ class LocalizationData {
           ConstantData().ilectAppStoreUrl +
           ConstantData().share1 +
           ConstantData().ilectPlayStoreUrl,
+      Tag.snackbar: ConstantData().homeSnackBar,
       Tag.sysinfo: ConstantData().sysinfo,
       Tag.sysinfo0: ConstantData().sysinfoListTileTitle0,
       Tag.sysinfo1: ConstantData().sysinfoListTileTitle1,
@@ -304,6 +338,7 @@ class LocalizationData {
       Tag.copyright: ConstantData().copyrightTH,
       Tag.error0: ConstantData().errorDialogTitle0TH,
       Tag.error1: ConstantData().errorDialog0TH,
+      Tag.error2: ConstantData().errorDialog4TH,
       Tag.feedback: ConstantData().feedbackTH,
       Tag.feedback0: ConstantData().feedbackPage0TH,
       Tag.feedback1: ConstantData().feedbackPage1TH,
@@ -316,6 +351,14 @@ class LocalizationData {
       Tag.feedback8: ConstantData().feedbackDialog0TH,
       Tag.feedback9: ConstantData().feedbackDialog1TH,
       Tag.feedback10: ConstantData().feedbackDialog2TH,
+      Tag.feedback11: ConstantData().feedbackDialogTitle0TH,
+      Tag.feedback12: ConstantData().feedbackDialogTitle1TH,
+      Tag.feedback13: (!Platform.isIOS)
+          ? ConstantData().feedbackDialog3TH
+          : ConstantData().feedbackDialog3THIOS,
+      Tag.feedback14: ConstantData().feedbackDialogTitle2TH,
+      Tag.feedback15: ConstantData().feedbackDialog4TH,
+      Tag.feedback16: ConstantData().feedbackDialogTitle3TH,
       Tag.formatDate: ConstantData().dateFormatTH,
       Tag.formatTime: ConstantData().timeFormatTH,
       Tag.privacy: ConstantData().privacyTH,
@@ -330,6 +373,7 @@ class LocalizationData {
           ConstantData().ilectAppStoreUrl +
           ConstantData().share1 +
           ConstantData().ilectPlayStoreUrl,
+      Tag.snackbar: ConstantData().homeSnackBarTH,
       Tag.sysinfo: ConstantData().sysinfoTH,
       Tag.sysinfo0: ConstantData().sysinfoListTileTitle0TH,
       Tag.sysinfo1: ConstantData().sysinfoListTileTitle1TH,
@@ -364,6 +408,7 @@ enum Tag {
   copyright,
   error0,
   error1,
+  error2,
   feedback,
   feedback0,
   feedback1,
@@ -376,6 +421,12 @@ enum Tag {
   feedback8,
   feedback9,
   feedback10,
+  feedback11,
+  feedback12,
+  feedback13,
+  feedback14,
+  feedback15,
+  feedback16,
   formatDate,
   formatTime,
   privacy,
@@ -387,6 +438,7 @@ enum Tag {
   search4,
   service,
   share,
+  snackbar,
   sysinfo,
   sysinfo0,
   sysinfo1,
@@ -482,23 +534,21 @@ class Provider {
   }
 
   void checkInternet(BuildContext context) async {
-    if (!Platform.isIOS) {
-      try {
-        await InternetAddress.lookup(ConstantData().testUrl).timeout(
-          Duration(seconds: 2),
-        );
-      } on Exception {
-        ConnectivityResult _result = await Connectivity().checkConnectivity();
-        String _connection;
-        (_result == ConnectivityResult.none)
-            ? _connection = LocalizationData.of(context, Tag.warning2)
-            : _connection = LocalizationData.of(context, Tag.warning3);
-        Catalog().showWarningDialog(
-          context,
-          LocalizationData.of(context, Tag.warning1) + _connection,
-          title: LocalizationData.of(context, Tag.warning0),
-        );
-      }
+    try {
+      await InternetAddress.lookup(ConstantData().testUrl).timeout(
+        Duration(seconds: 2),
+      );
+    } on Exception {
+      ConnectivityResult _result = await Connectivity().checkConnectivity();
+      String _connection;
+      (!Platform.isIOS && (_result == ConnectivityResult.none))
+          ? _connection = LocalizationData.of(context, Tag.warning2)
+          : _connection = LocalizationData.of(context, Tag.warning3);
+      Catalog().showWarningDialog(
+        context,
+        LocalizationData.of(context, Tag.warning1) + _connection,
+        title: LocalizationData.of(context, Tag.warning0),
+      );
     }
   }
 }

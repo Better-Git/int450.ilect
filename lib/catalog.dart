@@ -4,15 +4,19 @@ import 'dart:io' show File, Platform;
 import 'package:battery/battery.dart';
 import 'package:device_info/device_info.dart';
 import 'package:dynamic_theme/dynamic_theme.dart';
+import 'package:firebase_database/firebase_database.dart' show FirebaseDatabase;
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
+import 'package:flutter_statusbar_manager/flutter_statusbar_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:package_info/package_info.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'main.dart' show HomePage;
 import 'provider.dart';
 
 String _query;
@@ -401,6 +405,8 @@ class _FeedbackFieldIOS extends StatelessWidget {
   _FeedbackFieldIOS(this._parent);
 
   final _parent;
+  static String _email = '';
+  static String _feedback = '';
 
   @override
   Widget build(BuildContext context) {
@@ -453,6 +459,7 @@ class _FeedbackFieldIOS extends StatelessWidget {
                               _parent._feedbackFocus,
                             );
                           },
+                          onSaved: (value) => _email = value,
                           style: TextStyle(color: Colors.black, fontSize: 14.5),
                           textInputAction: TextInputAction.next,
                           validator: (value) {
@@ -492,9 +499,6 @@ class _FeedbackFieldIOS extends StatelessWidget {
               decoration: InputDecoration(
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(vertical: 7.5),
-//                focusedBorder: UnderlineInputBorder(
-//                  borderSide: BorderSide(color: Colors.black54),
-//                ),
                 hintStyle: TextStyle(
                   color: Colors.black54,
                   letterSpacing: -0.5,
@@ -504,8 +508,8 @@ class _FeedbackFieldIOS extends StatelessWidget {
               focusNode: _parent._feedbackFocus,
               keyboardType: TextInputType.multiline,
               maxLines: null,
+              onSaved: (value) => _feedback = value,
               style: TextStyle(color: Colors.black, fontSize: 16.5),
-//              style: TextStyle(color: Colors.black, fontSize: 20.0),
               textInputAction: TextInputAction.done,
               validator: (value) => (value.trim().isNotEmpty) ? null : '',
             ),
@@ -666,17 +670,30 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
       _feedbackController = TextEditingController(),
       _feedbackFocus = FocusNode(),
       _formKey = GlobalKey<FormState>();
-  bool _isCursorDirty = false, _isEmailValid = false, _isFeedbackDirty = false;
+  final String _email =
+          ConstantData().feedbackPage1.substring(0, 5).toLowerCase(),
+      _feedback = ConstantData().feedback.substring(5).toLowerCase(),
+      _screenshot = ConstantData().feedbackPage3.toLowerCase();
+  bool _isCursorDirty = false, _isEmailValid = true, _isFeedbackDirty = false;
   Color _sendIconColor = Colors.grey;
   File _image;
   String _note, _warning;
 
-  _onBackPressed() {
+  _onBackPressed(bool canCallSnackBar) {
     _isCursorDirty = false;
-    _isEmailValid = false;
+    _isEmailValid = true;
     _isFeedbackDirty = false;
     Catalog()._cursorColor(context, ConstantData().defaultColor);
-    Navigator.pop(context);
+    if (canCallSnackBar) {
+      Navigator.popUntil(
+        context,
+        ModalRoute.withName(Navigator.defaultRouteName),
+      );
+      HomePage.canShowSnackBar = true;
+    } else {
+      Navigator.pop(context);
+    }
+    return Future<bool>.value(false);
   }
 
   bool _isIPAddress(String input, [bool isIPv6]) {
@@ -882,26 +899,21 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
   }
 
   bool _validateLocalPart(String localPart) {
-    if (localPart.length < 65) {
+    if (localPart.isNotEmpty && localPart.length < 65) {
       // Validate dot-string
-      if (!localPart.startsWith(ConstantData().nonLocalPattern) &&
+      if (!localPart.startsWith(ConstantData().nonLocalWithDotPattern) &&
           !localPart[localPart.length - 1].contains(
-            ConstantData().nonLocalPattern,
-          ) &&
-          localPart.split('').every(
-                (value) => !value.contains(ConstantData().nonLocalPattern),
-              )) {
-        if (localPart.length > 1) {
-          for (int _i = 0; _i < localPart.length; _i++) {
-            if ((_i + 1 >= localPart.length)) break;
-            String _check = localPart[_i] + localPart[_i + 1];
-            if ('.'.allMatches(_check).length > 1) {
-              break;
-            } else {
-              return true;
-            }
-          }
-        } else {
+            ConstantData().nonLocalWithDotPattern,
+          )) {
+        if (localPart.contains('.') &&
+            localPart.split('.').every((value) {
+              return value.isNotEmpty &&
+                  !value.contains(ConstantData().nonLocalWithoutDotPattern);
+            })) {
+          return true;
+        } else if (localPart.split('').every(
+              (value) => !value.contains(ConstantData().nonLocalWithDotPattern),
+            )) {
           return true;
         }
       } else
@@ -1110,6 +1122,69 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
         : setState(() => _sendIconColor = Colors.grey);
   }
 
+  void _displayUploadDialog(StorageUploadTask task) {
+    (!Platform.isIOS)
+        ? showDialog(
+            barrierDismissible: false,
+            builder: (_) => _UploadDialog(task),
+            context: context,
+          )
+        : showCupertinoDialog(
+            builder: (_) => _UploadDialog(task),
+            context: context,
+          );
+  }
+
+  void _insertFeedback() async {
+    var _feedbackFolder = FirebaseStorage.instance.ref().child(_feedback),
+        _feedbackSchema =
+            FirebaseDatabase.instance.reference().child(_feedback),
+        _list = Catalog()._systemInfoList(context),
+        _map = {
+      _email: _FeedbackFieldIOS._email,
+      _feedback: _FeedbackFieldIOS._feedback,
+    };
+    String _id, _name, _path, _type;
+    StorageUploadTask _task;
+    List _data = (await _feedbackSchema.once()).value;
+    _id = (_data != null) ? (_data.length).toString() : 1.toString();
+    _list.forEach((value) {
+      if (_list.indexOf(value) % 2 == 0) {
+        _map[value.toLowerCase()] = _list[_list.indexOf(value) + 1];
+      }
+    });
+
+    // Upload any image into Firebase Storage
+    // and add a value (_path) for the next step.
+    if (_image != null) {
+      _name = _image.path.replaceAll(_image.parent.path, '').substring(1);
+      _type = 'image/${_name.substring(_name.lastIndexOf('.') + 1)}';
+      _task = _feedbackFolder.child(_name).putFile(
+            _image,
+            StorageMetadata(contentType: _type),
+          );
+      FlutterStatusbarManager.setNetworkActivityIndicatorVisible(true);
+      _displayUploadDialog(_task);
+      _UploadDialog._progress = 0.0;
+      _path = await (await _task.onComplete).ref?.getDownloadURL();
+    }
+    _map[_screenshot] = (_path ?? '');
+
+    // Set all values (_map) into Firebase Realtime Database
+    // with an index as a number (_id).
+    _feedbackSchema.child(_id).set(_map).then((_) {
+      _FeedbackFieldIOS._email = '';
+      _FeedbackFieldIOS._feedback = '';
+      _onBackPressed(true);
+    }).catchError((_) {
+      Catalog().showWarningDialog(
+        context,
+        LocalizationData.of(context, Tag.error2),
+        title: LocalizationData.of(context, Tag.error0),
+      );
+    }, test: (error) => error is! AssertionError);
+  }
+
   void _invalidateHandleTap() {
     FocusNode _focus;
     if (_isCursorDirty && !_isEmailValid) {
@@ -1131,7 +1206,9 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
   }
 
   void _validateHandleTap() {
-    _onBackPressed();
+    _formKey.currentState.save();
+    Provider().checkInternet(context);
+    _insertFeedback();
   }
 
   @override
@@ -1202,7 +1279,7 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
         ),
         bottomNavigationBar: _FeedbackNoteIOS(),
       ),
-      onWillPop: () => _onBackPressed(),
+      onWillPop: () => _onBackPressed(false),
     );
   }
 }
@@ -1712,5 +1789,216 @@ class _SystemInfoListTileState extends State<_SystemInfoListTile> {
             subtitle: Text(_systemInfoDynamicList(context)[++_index]),
             title: Text(_content),
           );
+  }
+}
+
+class _UploadDialog extends StatelessWidget {
+  _UploadDialog(this._task);
+
+  final StorageUploadTask _task;
+  static double _progress = 0.0;
+
+  String _bytesTransferred(StorageTaskSnapshot snapshot) {
+    int _total = snapshot.totalByteCount,
+        _transferred = snapshot.bytesTransferred;
+    double _sentKilo = _transferred / 1024,
+        _sentMega = _sentKilo / 1024,
+        _sentGiga = _sentMega / 1024,
+        _sizeKilo = _total / 1024,
+        _sizeMega = _sizeKilo / 1024,
+        _sizeGiga = _sizeMega / 1024;
+    String _sent, _sentUnit, _size, _sizeUnit;
+    // Format bytesTransferred
+    if (double.parse(_sentGiga.toStringAsFixed(1)) >= 1.0) {
+      _sent = _sentGiga.toStringAsFixed(1);
+      _sentUnit = 'GB';
+    } else if (double.parse(_sentMega.toStringAsFixed(1)) >= 1.0) {
+      _sent = _sentMega.toStringAsFixed(1);
+      _sentUnit = 'MB';
+    } else if (double.parse(_sentKilo.toStringAsFixed(1)) >= 1.0) {
+      _sent = _sentKilo.toStringAsFixed(1);
+      _sentUnit = 'KB';
+    } else {
+      _sent = _transferred.toStringAsFixed(1);
+      _sentUnit = 'B';
+    }
+    // Format totalByteCount
+    if (double.parse(_sizeGiga.toStringAsFixed(1)) >= 1.0) {
+      _size = _sizeGiga.toStringAsFixed(1);
+      _sizeUnit = 'GB';
+    } else if (double.parse(_sizeMega.toStringAsFixed(1)) >= 1.0) {
+      _size = _sizeMega.toStringAsFixed(1);
+      _sizeUnit = 'MB';
+    } else if (double.parse(_sizeKilo.toStringAsFixed(1)) >= 1.0) {
+      _size = _sizeKilo.toStringAsFixed(1);
+      _sizeUnit = 'KB';
+    } else {
+      _size = _total.toStringAsFixed(1);
+      _sizeUnit = 'B';
+    }
+    _progress = _transferred / _total * 100.0;
+    return '$_sent $_sentUnit of $_size $_sizeUnit';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<StorageTaskEvent>(
+      builder: (context, asyncSnapshot) {
+        // A comparison table on StorageUploadTask (_task) status,
+        // AsyncSnapshot and StorageTaskEventType information.
+        //          | isComplete | isCanceled | isSuccessful | hasData |   type
+        // initial  :      F     |      F     |      F       |    F    |   null
+        // progress :      F     |      F     |      F       |    T    |  progress
+        // cancel   :      T     |      T     |      F       |    T    |  failure
+        // error    :      T     |      F     |      F       |    T    |  failure
+        // success  :      T     |      F     |      T       |    T    |  success
+        bool _isError = (_task.isComplete &&
+            !_task.isCanceled &&
+            !_task.isSuccessful &&
+            asyncSnapshot.hasData &&
+            (asyncSnapshot.data?.type == StorageTaskEventType.failure));
+        IconData _icon = (_isError)
+            ? Icons.warning
+            : (_task.isSuccessful) ? Icons.done : Icons.file_upload;
+        String _subtitle = (_isError)
+                ? LocalizationData.of(context, Tag.feedback13)
+                : (!asyncSnapshot.hasData)
+                    ? LocalizationData.of(context, Tag.feedback15)
+                    : _bytesTransferred(asyncSnapshot.data.snapshot),
+            _title = (_isError)
+                ? LocalizationData.of(context, Tag.feedback12)
+                : (_task.isSuccessful)
+                    ? LocalizationData.of(context, Tag.feedback16)
+                    : (!asyncSnapshot.hasData)
+                        ? LocalizationData.of(context, Tag.feedback14)
+                        : LocalizationData.of(context, Tag.feedback11);
+        if (_task.isCanceled || _isError) _task.cancel();
+        if (_task.isSuccessful || _isError) {
+          FlutterStatusbarManager.setNetworkActivityIndicatorVisible(false);
+          if (_task.isSuccessful) Navigator.maybePop(context);
+        }
+        return (!Platform.isIOS)
+            ? AlertDialog(
+                actions: (_task.isSuccessful)
+                    ? null
+                    : <Widget>[
+                        FlatButton(
+                          child: Text(
+                            (_isError)
+                                ? MaterialLocalizations.of(context)
+                                    .modalBarrierDismissLabel
+                                    .toUpperCase()
+                                : MaterialLocalizations.of(context)
+                                    .cancelButtonLabel,
+                          ),
+                          onPressed: () {
+                            if (_task.isInProgress || _isError) {
+                              _task.cancel();
+                              _progress = 0.0;
+                            }
+                            FlutterStatusbarManager
+                                .setNetworkActivityIndicatorVisible(false);
+                            Navigator.maybePop(context);
+                          },
+                        )
+                      ],
+                content: Column(
+                  children: <Widget>[
+                    Padding(
+                      child: Column(
+                        children: <Widget>[
+                          Padding(
+                            child: LinearProgressIndicator(
+                              backgroundColor: Colors.white,
+                              value: _progress * 0.01,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                (_isError)
+                                    ? Colors.grey
+                                    : ConstantData().defaultColor,
+                              ),
+                            ),
+                            padding: EdgeInsets.only(bottom: 17.5),
+                          ),
+                          Row(
+                            children: <Widget>[Text(_subtitle)],
+                            mainAxisAlignment: MainAxisAlignment.start,
+                          ),
+                        ],
+                      ),
+                      padding: EdgeInsets.only(left: 5.0, right: 5.0),
+                    ),
+                  ],
+                  mainAxisSize: MainAxisSize.min,
+                ),
+                title: Row(
+                  children: <Widget>[
+                    Icon(_icon, color: Colors.black54),
+                    Text('  $_title'),
+                  ],
+                ),
+              )
+            : CupertinoAlertDialog(
+                actions: (_task.isSuccessful)
+                    ? <Widget>[]
+                    : <Widget>[
+                        Row(),
+                        Divider(color: Colors.black45, height: 0.0),
+                        Stack(
+                          children: <Widget>[
+                            CupertinoDialogAction(
+                              child: Text(
+                                (_isError)
+                                    ? MaterialLocalizations.of(context)
+                                        .okButtonLabel
+                                    : 'Cancel',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              isDefaultAction: true,
+                              onPressed: () {},
+                            ),
+                            Positioned.fill(
+                              child: Material(
+                                child: InkWell(
+                                  onTap: () {
+                                    if (_task.isInProgress || _isError) {
+                                      _task.cancel();
+                                      _progress = 0.0;
+                                    }
+                                    FlutterStatusbarManager
+                                        .setNetworkActivityIndicatorVisible(
+                                            false);
+                                    Navigator.maybePop(context);
+                                  },
+                                  splashColor: Colors.transparent,
+                                ),
+                                color: Colors.transparent,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                content: Column(
+                  children: <Widget>[
+                    Padding(
+                      child: LinearProgressIndicator(
+                        backgroundColor: Colors.white,
+                        value: _progress * 0.01,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          (_isError)
+                              ? CupertinoColors.inactiveGray
+                              : ConstantData().defaultColor,
+                        ),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 17.5),
+                    ),
+                    Text(_subtitle),
+                  ],
+                  mainAxisSize: MainAxisSize.min,
+                ),
+                title: Text(_title),
+              );
+      },
+      stream: _task.events,
+    );
   }
 }
