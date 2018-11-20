@@ -1,22 +1,30 @@
+// Copyright 2018 School of Information Technology, KMUTT. All rights reserved.
+
 import 'dart:async' show Timer;
 import 'dart:io' show File, Platform;
+import 'dart:math' show max;
 
 import 'package:battery/battery.dart';
+import 'package:collection/collection.dart';
 import 'package:device_info/device_info.dart';
 import 'package:dynamic_theme/dynamic_theme.dart';
-import 'package:firebase_database/firebase_database.dart' show FirebaseDatabase;
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_statusbar_manager/flutter_statusbar_manager.dart';
+import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:package_info/package_info.dart';
+import 'package:rounded_modal/rounded_modal.dart';
 import 'package:share/share.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'main.dart' show HomePage;
+import 'main.dart' show HomePage, SecondPage;
 import 'provider.dart';
 
 String _query;
@@ -24,6 +32,8 @@ String _query;
 class Catalog {
   List _systemInfoList(BuildContext context) =>
       _SystemInfoListTileState.override()._systemInfoDynamicList(context);
+
+  List favoriteList() => _CardWidget._favorites;
 
   List<Widget> searchList(parent, String category) {
     _SearchListTile._category = category;
@@ -63,14 +73,16 @@ class Catalog {
 
   List<Widget> toSystemInfoListTile(BuildContext context) {
     var _items = List<Widget>(), _list = _systemInfoList(context);
-    for (var _e in _list) {
-      _items.add(_SystemInfoListTile(content: _e, context: context));
+    for (var _item in _list) {
+      _items.add(_SystemInfoListTile(content: _item, context: context));
     }
     return _items;
   }
 
   TextStyle _textStyleBottomAppBar(BuildContext context, String message) {
-    return (!Platform.isIOS || (message == ConstantData().title))
+    return (!Platform.isIOS ||
+            (message == ConstantData().title) ||
+            (message == ConstantData().favoriteButton0))
         ? Theme.of(context).textTheme.title
         : TextStyle(
             fontFamily: ConstantData().font,
@@ -121,10 +133,17 @@ class Catalog {
 
   Widget bottomAppBarOverride(String title) => _BottomAppBar.override(title);
 
+  Widget cardWidget(int i, List list, [parent, String category]) =>
+      _CardWidget(i, list, parent, category);
+
+  Widget favoriteButton() => _FavoriteButton();
+
+  Widget favoriteInfoRow() => _FavoriteInfoRow();
+
   Widget feedbackWidget() => _FeedbackWidget();
 
-  Widget cardWidget(int i, List list, [String category]) =>
-      _CardWidget(i, list, category);
+  Widget infoWidget(bool isFavoritePage, AsyncSnapshot snapshot, List list) =>
+      _InfoWidget(isFavoritePage, snapshot, list);
 
   void _cursorColor(BuildContext context, Color color) =>
       DynamicTheme.of(context).setThemeData(ProviderThemeData(color).theme);
@@ -146,11 +165,16 @@ class Catalog {
           );
   }
 
+  void readCardDataList(AsyncSnapshot snapshot, List list) =>
+      _CardWidget._readCardDataList(snapshot, list);
+
+  void readFavoriteValue() => _CardWidget._readFavoriteValue();
+
   void showWarningDialog(BuildContext context, String content,
-      {bool override, bool warning, String title}) {
+      {bool override, bool dismissible, String title}) {
     (!Platform.isIOS || (override ?? false))
         ? showDialog(
-            barrierDismissible: (warning ?? true) ? false : true,
+            barrierDismissible: (dismissible ?? false) ? true : false,
             builder: (_) {
               return (override ?? false)
                   ? _ErrorDialog.override(content)
@@ -179,139 +203,476 @@ class _BottomAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(
-      child: Container(
-        child: Row(
-          children: <Widget>[
-            IconButton(
-              icon: Icon(Icons.menu),
-              onPressed: () {
-                showModalBottomSheet(
-                  builder: (_) => _BottomDrawer(),
-                  context: context,
-                );
-              },
-              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-            ),
-            (_isOverridden || (_title != ConstantData().title))
-                ? Text(
-                    _title,
-                    style: Catalog()._textStyleBottomAppBar(context, _title),
-                  )
-                : Tooltip(
-                    child: FlatButton(
-                      child: Text(
-                        _title,
-                        style:
-                            Catalog()._textStyleBottomAppBar(context, _title),
+      child: Material(
+        child: Container(
+          child: Row(
+            children: <Widget>[
+              IconButton(
+                icon: Icon(Icons.menu),
+                onPressed: () {
+                  showRoundedModalBottomSheet(
+                    builder: (_) => _BottomDrawer(),
+                    color: Colors.white,
+                    context: context,
+                    radius: 20.0,
+                  );
+                },
+                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+              ),
+              (_isOverridden || (_title != ConstantData().title))
+                  ? Text(
+                      _title,
+                      style: Catalog()._textStyleBottomAppBar(context, _title),
+                    )
+                  : Tooltip(
+                      child: FlatButton(
+                        child: Text(
+                          _title,
+                          style:
+                              Catalog()._textStyleBottomAppBar(context, _title),
+                        ),
+                        onPressed: () {
+                          Navigator.popUntil(
+                            context,
+                            ModalRoute.withName(Navigator.defaultRouteName),
+                          );
+                        },
+                        padding: EdgeInsets.all(11.5),
+                        shape: StadiumBorder(),
                       ),
-                      onPressed: () {
-                        Navigator.popUntil(
-                          context,
-                          ModalRoute.withName(Navigator.defaultRouteName),
-                        );
-                      },
-                      padding: EdgeInsets.all(11.5),
-                      shape: StadiumBorder(),
+                      message: LocalizationData.of(context, Tag.tooltip0),
                     ),
-                    message: LocalizationData.of(context, Tag.tooltip0),
-                  ),
-            (_isOverridden)
-                ? IconButton(
-                    icon: Icon(Icons.share),
-                    onPressed: () =>
-                        Share.share(LocalizationData.of(context, Tag.share)),
-                    tooltip: LocalizationData.of(context, Tag.tooltip1),
-                  )
-                : IconButton(
-                    icon: Catalog()._backIcon(),
-                    onPressed: () => Navigator.pop(context),
-                    tooltip:
-                        MaterialLocalizations.of(context).backButtonTooltip,
-                  ),
-          ],
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              (_isOverridden)
+                  ? IconButton(
+                      icon: Icon(Icons.share),
+                      onPressed: () =>
+                          Share.share(LocalizationData.of(context, Tag.share)),
+                      tooltip: LocalizationData.of(context, Tag.tooltip1),
+                    )
+                  : IconButton(
+                      icon: Catalog()._backIcon(),
+                      onPressed: () => Navigator.pop(context),
+                      tooltip:
+                          MaterialLocalizations.of(context).backButtonTooltip,
+                    ),
+            ],
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: Colors.blue, width: 2.0)),
+          ),
         ),
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.blue, width: 2.0)),
-        ),
+        color: Colors.white,
       ),
     );
   }
 }
 
 class _BottomDrawer extends StatelessWidget {
-//  bool _downloaded = false;
+//  static bool _offline = false;
+
+  _onWillPop(BuildContext context) {
+    Navigator.pop(context);
+    Timer(
+      Duration(milliseconds: 305),
+      () => FlutterStatusbarcolor.setStatusBarColor(Colors.white),
+    );
+    return Future<bool>.value(false);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-//        SwitchListTile(
-//          onChanged: (bool value) {
-//            (() {
-//              _downloaded = value;
-//            });
-//          },
-//          secondary: Icon(Icons.cloud_off),
-//          title: Text(offline),
-//          value: _downloaded,
-//        ),
-//        Divider(height: 1.0),
-        ListTile(
-          onTap: () {
-            Catalog()._systemInfoList(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ConstantData().feedbackPage,
-              ),
-            );
-          },
-          title: Text(LocalizationData.of(context, Tag.feedback)),
-        ),
-        Divider(height: 1.0),
-        AboutListTile(
-          aboutBoxChildren: [
-            Padding(
-              child: Column(
-                children: <Widget>[
-                  FlatButton(
-                    child: Text(LocalizationData.of(context, Tag.service)),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ConstantData().servicePage,
-                        ),
-                      );
-                    },
-                    textColor: Colors.black87,
+    FlutterStatusbarcolor.setStatusBarColor(Colors.transparent);
+    return WillPopScope(
+      child: Material(
+        child: Column(
+          children: <Widget>[
+//            SwitchListTile(
+//              onChanged: (value) => _offline = value,
+//              secondary: Icon(Icons.cloud_off),
+//              title: Text(LocalizationData.of(context, Tag.offline)),
+//              value: _offline,
+//            ),
+//            Divider(height: 1.0),
+            ListTile(
+              onTap: () {
+                Catalog()._systemInfoList(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ConstantData().feedbackPage,
                   ),
-                  FlatButton(
-                    child: Text(LocalizationData.of(context, Tag.privacy)),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ConstantData().privacyPage,
+                );
+              },
+              title: Text(LocalizationData.of(context, Tag.feedback)),
+            ),
+            Divider(height: 1.0),
+            AboutListTile(
+              aboutBoxChildren: [
+                Padding(
+                  child: Column(
+                    children: <Widget>[
+                      FlatButton(
+                        child: Text(LocalizationData.of(context, Tag.service)),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ConstantData().servicePage,
+                            ),
+                          );
+                        },
+                        textColor: Colors.black87,
+                      ),
+                      FlatButton(
+                        child: Text(LocalizationData.of(context, Tag.privacy)),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ConstantData().privacyPage,
+                            ),
+                          );
+                        },
+                        textColor: Colors.black87,
+                      ),
+                    ],
+                  ),
+                  padding: EdgeInsets.only(top: 40.0),
+                ),
+              ],
+              applicationIcon:
+                  Image.asset(ConstantData().ilectIcon, scale: 6.5),
+              applicationLegalese: LocalizationData.of(context, Tag.copyright),
+              applicationName: ConstantData().title,
+              applicationVersion: ConstantData().version,
+              icon: Icon(Icons.info_outline),
+            ),
+            Divider(height: 1.0),
+          ],
+          mainAxisSize: MainAxisSize.min,
+        ),
+      ),
+      onWillPop: () => _onWillPop(context),
+    );
+  }
+}
+
+class _CardWidget extends StatelessWidget {
+  _CardWidget(int i, List list, [parent, String category])
+      : _parent = parent,
+        _index = i,
+        _items = list,
+        _category = category;
+
+  final _parent;
+  final int _index;
+  final List<CardData> _items;
+  final String _category;
+  static var _favorites = List(),
+      _keys = List<GlobalObjectKey<SlidableState>>();
+
+  static void _readCardDataList(AsyncSnapshot snapshot, List list) {
+    if (snapshot.hasData) {
+      int _index = 0;
+      List _list = snapshot?.data?.snapshot?.value ?? [];
+      list.clear();
+      if (_list.isNotEmpty) {
+        _list = _list.sublist(1);
+        _list.forEach((item) {
+          list.add(CardData.fromMap(_index, Map.from(item)));
+          _index++;
+        });
+      }
+    }
+  }
+
+  static void _readFavoriteValue() async {
+    var _prefs = await SharedPreferences.getInstance();
+    _prefs.getKeys().forEach((key) {
+      if (_favorites.length < _prefs.getKeys().length) {
+        _favorites.add(_prefs.getStringList(key));
+      }
+    });
+  }
+
+  _readFavoriteKey() async {
+    var _nums = List<int>(), _prefs = await SharedPreferences.getInstance();
+    int _lastIndex = -1;
+    if (_prefs.getKeys().isNotEmpty) {
+      _prefs.getKeys().forEach((key) {
+        if (key.contains('${Tag.favorite}')) {
+          _nums.add(int.parse(key.substring(12)));
+        }
+      });
+    }
+    if (_nums.isNotEmpty) _lastIndex = _nums.reduce(max);
+    return Future<int>.value(_lastIndex + 1);
+  }
+
+  Widget _buildCardWidget(bool isHomePage) {
+    String _text = _items[_index].name ?? _items[_index].keyword;
+    return Card(
+      child: Stack(
+        children: <Widget>[
+          (isHomePage)
+              ? Positioned.fill(
+                  child: Padding(
+                    child: Column(
+                      children: <Widget>[
+                        Expanded(
+                          child: Image.network(
+                            Provider().createImageUrl(_items[_index]),
+                          ),
                         ),
-                      );
-                    },
-                    textColor: Colors.black87,
+                        Padding(
+                          child: Text(
+                            _items[_index].name,
+                            style: Catalog()._textStyleCard(true),
+                          ),
+                          padding: EdgeInsets.only(bottom: 11.0, top: 11.0),
+                        ),
+                      ],
+                    ),
+                    padding: EdgeInsets.only(top: 19.0),
+                  ),
+                ) // IndexCard
+              : Padding(
+                  child: Column(
+                    children: <Widget>[
+                      Padding(
+                        child: Image.network(
+                          Provider().createImageUrl(_items[_index], _category),
+                        ),
+                        padding: EdgeInsets.only(
+                          bottom: 15.0,
+                          left: 16.0,
+                          right: 16.0,
+                          top: 18.0,
+                        ),
+                      ),
+                      LayoutBuilder(
+                        builder: (_, size) {
+                          TextPainter _overflowTextPainter = TextPainter(
+                            maxLines: 1,
+                            text: TextSpan(
+                              style: Catalog()._textStyleCard(false),
+                              text: _text,
+                            ),
+                            textAlign: TextAlign.center,
+                            textDirection: TextDirection.ltr,
+                          );
+                          Widget _title = Row(
+                            children: Catalog().toSplitString(true, _text),
+                            mainAxisAlignment: MainAxisAlignment.center,
+                          );
+                          _overflowTextPainter.layout(maxWidth: size.maxWidth);
+                          return (!_overflowTextPainter.didExceedMaxLines)
+                              ? _title
+                              : _MarqueeWidget(
+                                  child: Row(
+                                    children: <Widget>[
+                                      _title,
+                                      Container(width: 30.0),
+                                      _title,
+                                    ],
+                                  ),
+                                );
+                        },
+                      ),
+                    ],
+                  ),
+                  padding: EdgeInsets.all(15.0),
+                ), // ObjectCard
+          _RippleCardEffect(
+            (isHomePage) ? _items[_index].name : _items[_index].keyword,
+            _category,
+          ),
+        ],
+      ),
+      elevation: 0.5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(38.0),
+        side: BorderSide(color: Colors.blue, width: 2.0),
+      ),
+    );
+  }
+
+  void _insertFavoriteKeyValue(String name) async {
+    var _prefs = await SharedPreferences.getInstance();
+    int _i = await _readFavoriteKey();
+    bool _listEqual(String key) =>
+        ListEquality().equals(_prefs.getStringList(key), [_category, name]);
+    (_prefs.getKeys().any((key) => _listEqual(key)))
+        ? _prefs.remove(_prefs.getKeys().where((key) => _listEqual(key)).join())
+        : _prefs.setStringList('${Tag.favorite}$_i', [_category, name]);
+    _favorites.clear();
+    Timer(
+      Duration(milliseconds: 250),
+      () {
+        _parent.setState(() {
+          _prefs.getKeys().forEach((key) {
+            _favorites.add(_prefs.getStringList(key));
+          });
+        });
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool _hasCategory = _category?.trim()?.isNotEmpty ?? false,
+        _isAdded = _favorites.any((item) {
+      return (item[0] == _category) &&
+          (item[1] == _items[_index].name ?? _items[_index].keyword);
+    });
+    var _slidableKey = GlobalObjectKey<SlidableState>(_items[_index].token);
+    if (_hasCategory) {
+      _keys.clear();
+      _items.forEach((item) {
+        if (_keys.length < _items.length) {
+          _keys.add(GlobalObjectKey<SlidableState>(item.token));
+        }
+      });
+    }
+    return (!_hasCategory)
+        ? _buildCardWidget(true)
+        : Slidable(
+            actionExtentRatio: 0.25,
+            child: _buildCardWidget(false),
+            controller: SecondPage.slidableController,
+            delegate: SlidableDrawerDelegate(),
+            key: _slidableKey,
+            secondaryActions: <Widget>[
+              Stack(
+                children: <Widget>[
+                  IconSlideAction(
+                    caption: ((_isAdded)
+                            ? LocalizationData.of(context, Tag.favorite1)
+                            : LocalizationData.of(context, Tag.favorite2)) +
+                        LocalizationData.of(context, Tag.favorite),
+                    color: (_isAdded) ? Colors.grey[200] : Colors.amber[400],
+                    icon: (_isAdded) ? Icons.star_border : Icons.star,
+                  ),
+                  Positioned.fill(
+                    child: Material(
+                      child: InkWell(
+                        onTap: () {
+                          _insertFavoriteKeyValue(
+                            _items[_index].name ?? _items[_index].keyword,
+                          );
+                          _slidableKey.currentState.close();
+                        },
+                        splashColor: Colors.transparent,
+                      ),
+                      color: Colors.transparent,
+                    ),
                   ),
                 ],
               ),
-              padding: EdgeInsets.only(top: 40.0),
-            ),
-          ],
-          applicationIcon: Image.asset(ConstantData().ilectIcon, scale: 6.5),
-          applicationLegalese: LocalizationData.of(context, Tag.copyright),
-          applicationName: ConstantData().title,
-          applicationVersion: ConstantData().version,
-          icon: Icon(Icons.info_outline),
-        ),
-      ],
-      mainAxisSize: MainAxisSize.min,
+            ],
+          );
+  }
+}
+
+class _ConfirmDialog extends StatelessWidget {
+  _ConfirmDialog(BuildContext context, String content, String url)
+      : _context = context,
+        _content = content,
+        _url = url;
+
+  final BuildContext _context;
+  final String _content, _url;
+
+  String _selectToastMessage() {
+    String _message = LocalizationData.of(_context, Tag.toast);
+    switch (_content) {
+      case ConstantData.gmaps:
+      case ConstantData.youtube:
+        _message += _content;
+        break;
+    }
+    return _message;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String _open = LocalizationData.of(_context, Tag.toast).trim(),
+        _title = LocalizationData.of(_context, Tag.search) +
+            ((!Platform.isIOS) ? ' \"$_content\"?' : ' \“$_content\”?');
+    FlutterStatusbarcolor.setStatusBarColor(Colors.transparent);
+    return AlertDialog(
+      actions: (!Platform.isIOS)
+          ? <Widget>[
+              FlatButton(
+                child:
+                    Text(MaterialLocalizations.of(context).cancelButtonLabel),
+                onPressed: () => _BottomDrawer()._onWillPop(context),
+              ),
+              FlatButton(
+                child: Text(_open.toUpperCase()),
+                onPressed: () {
+                  _SearchListTile.override()._launchUrl(
+                    _context,
+                    _url,
+                    message: _selectToastMessage(),
+                  );
+                  _BottomDrawer()._onWillPop(context);
+                },
+              ),
+            ]
+          : <Widget>[
+              CupertinoButton(
+                child: Text(
+                  (!Provider().isEN(context))
+                      ? MaterialLocalizations.of(context).cancelButtonLabel
+                      : 'Cancel',
+                  style: TextStyle(
+                    color: CupertinoColors.activeBlue,
+                    fontSize: 17.0,
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                onPressed: () => _BottomDrawer()._onWillPop(context),
+                padding: EdgeInsets.symmetric(horizontal: 6.0),
+              ),
+              CupertinoButton(
+                child: Text(
+                  _open,
+                  style: TextStyle(
+                    color: CupertinoColors.activeBlue,
+                    fontSize: 17.0,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                onPressed: () {
+                  _SearchListTile.override()._launchUrl(
+                    _context,
+                    _url,
+                    forceSafariVC: false,
+                  );
+                  _BottomDrawer()._onWillPop(context);
+                },
+              ),
+            ],
+      content: Text(
+        _title,
+        style: (!Platform.isIOS)
+            ? null
+            : TextStyle(
+                color: Colors.black,
+                fontSize: 17.0,
+                letterSpacing: -0.5,
+              ),
+      ),
+      contentPadding: (!Platform.isIOS)
+          ? EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 24.0)
+          : EdgeInsets.only(left: 19.5, top: 18.0),
+      shape: (!Platform.isIOS)
+          ? null
+          : RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
     );
   }
 }
@@ -341,6 +702,7 @@ class _ErrorDialog extends StatelessWidget {
     String _text = (_isExtended)
         ? _content
         : LocalizationData.of(context, Tag.error1) + _content;
+    FlutterStatusbarcolor.setStatusBarColor(Colors.transparent);
     return (!Platform.isIOS || _isOverridden)
         ? AlertDialog(
             actions: <Widget>[
@@ -352,8 +714,8 @@ class _ErrorDialog extends StatelessWidget {
                           .modalBarrierDismissLabel
                           .toUpperCase(),
                 ),
-                onPressed: () => Navigator.pop(context),
-              )
+                onPressed: () => _BottomDrawer()._onWillPop(context),
+              ),
             ],
             content: Text(_text),
             title: (_isOverridden)
@@ -384,7 +746,7 @@ class _ErrorDialog extends StatelessWidget {
                   Positioned.fill(
                     child: Material(
                       child: InkWell(
-                        onTap: () => Navigator.pop(context),
+                        onTap: () => _BottomDrawer()._onWillPop(context),
                         splashColor: Colors.transparent,
                       ),
                       color: Colors.transparent,
@@ -401,12 +763,77 @@ class _ErrorDialog extends StatelessWidget {
   }
 }
 
+class _FavoriteButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      child: Container(
+        child: RaisedButton.icon(
+          color: Colors.white,
+          elevation: 0.5,
+          highlightElevation: 0.5,
+          icon: Icon(Icons.star),
+          label: Text(
+            LocalizationData.of(context, Tag.favorite),
+            style: TextStyle(fontSize: 18.0),
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ConstantData().favoritePage,
+              ),
+            );
+          },
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(38.0),
+            side: BorderSide(color: Colors.blue, width: 2.0),
+          ),
+        ),
+        height: 50.0,
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+    );
+  }
+}
+
+class _FavoriteInfoRow extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Container(
+            child: Row(
+              children: <Widget>[
+                Padding(
+                  child: Icon(Icons.info_outline),
+                  padding: EdgeInsets.symmetric(horizontal: 4.5),
+                ),
+                Padding(
+                  child: Text(LocalizationData.of(context, Tag.favorite0)),
+                  padding: EdgeInsets.only(
+                    bottom: (Provider().isEN(context)) ? 0.0 : 2.5,
+                    left: 7.0,
+                    top: (Provider().isEN(context)) ? 1.0 : 0.0,
+                  ),
+                ),
+              ],
+            ),
+            color: Colors.grey[200],
+            height: 38.0,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _FeedbackFieldIOS extends StatelessWidget {
-  _FeedbackFieldIOS(this._parent);
+  _FeedbackFieldIOS(parent) : _parent = parent;
 
   final _parent;
-  static String _email = '';
-  static String _feedback = '';
+  static String _email = '', _feedback = '';
 
   @override
   Widget build(BuildContext context) {
@@ -591,13 +1018,18 @@ class _FeedbackNoteIOS extends StatelessWidget {
 }
 
 class _FeedbackScreenshotIOS extends StatelessWidget {
-  _FeedbackScreenshotIOS(this._parent, File image) : _image = image;
+  _FeedbackScreenshotIOS(parent, File image)
+      : _parent = parent,
+        _image = image;
 
   final _parent;
   final File _image;
 
   void _getImage() async {
     File _img = await ImagePicker.pickImage(source: ImageSource.gallery);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ));
     _parent.setState(() => _parent._image = _img);
   }
 
@@ -805,8 +1237,8 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
         _hextets.insert(_hextets.indexOf('0000'), '0000');
       }
     }
-    if (_hextets.every((value) => value.length < 5) &&
-        _allocatedPrefixes.contains(_hextets[0])) {
+    if (_allocatedPrefixes.contains(_hextets[0]) &&
+        _hextets.every((value) => value.length < 5)) {
       switch (_hextets[0]) {
         case '2001':
           if (_prefixList('0001', '0fff').contains(_hextets[1])) {
@@ -818,7 +1250,9 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
                 (!((_hextets[1] == '0004') && (_hextets[2] == '0112'))) &&
                 (_hextets[1] != '0005') &&
                 (!_prefixList('0010', '002f').contains(_hextets[1])) &&
-                (_hextets[1] != '0db8')) continue validCase;
+                (_hextets[1] != '0db8')) {
+              continue validCase;
+            }
           } else if (_prefixList('1200', '3bff').contains(_hextets[1]) ||
               _prefixList('4000', '4dff').contains(_hextets[1]) ||
               _prefixList('5000', '5fff').contains(_hextets[1]) ||
@@ -911,9 +1345,9 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
                   !value.contains(ConstantData().nonLocalWithoutDotPattern);
             })) {
           return true;
-        } else if (localPart.split('').every(
-              (value) => !value.contains(ConstantData().nonLocalWithDotPattern),
-            )) {
+        } else if (localPart.split('').every((value) {
+          return !value.contains(ConstantData().nonLocalWithDotPattern);
+        })) {
           return true;
         }
       } else
@@ -1089,7 +1523,7 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
     if (!_isCursorDirty || _isValid) {
       if (_isAtSignTyped) {
         ((_email.substring(0, _realAtSignIndex).length > 32) ||
-                (_email.substring(_realAtSignIndex).length > 32))
+                (_email.substring(_realAtSignIndex + 1).length > 32))
             ? _note = LocalizationData.of(context, Tag.feedback2)
             : _note = null;
       }
@@ -1117,9 +1551,10 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
             : (_isEmailValid)
                 ? Catalog()._cursorColor(context, ConstantData().defaultColor)
                 : Catalog()._cursorColor(context, ConstantData().errorColor);
-    (_isEmailValid && _isFeedbackNotEmpty)
-        ? setState(() => _sendIconColor = Colors.black)
-        : setState(() => _sendIconColor = Colors.grey);
+    setState(() {
+      _sendIconColor =
+          (_isEmailValid && _isFeedbackNotEmpty) ? Colors.black : Colors.grey;
+    });
   }
 
   void _displayUploadDialog(StorageUploadTask task) {
@@ -1137,8 +1572,7 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
 
   void _insertFeedback() async {
     var _feedbackFolder = FirebaseStorage.instance.ref().child(_feedback),
-        _feedbackSchema =
-            FirebaseDatabase.instance.reference().child(_feedback),
+        _feedbackSchema = Provider().cardDataDatabaseReference(_feedback),
         _list = Catalog()._systemInfoList(context),
         _map = {
       _email: _FeedbackFieldIOS._email,
@@ -1147,7 +1581,7 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
     String _id, _name, _path, _type;
     StorageUploadTask _task;
     List _data = (await _feedbackSchema.once()).value;
-    _id = (_data != null) ? (_data.length).toString() : 1.toString();
+    _id = (_data?.length)?.toString() ?? 1.toString();
     _list.forEach((value) {
       if (_list.indexOf(value) % 2 == 0) {
         _map[value.toLowerCase()] = _list[_list.indexOf(value) + 1];
@@ -1168,10 +1602,10 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
       _UploadDialog._progress = 0.0;
       _path = await (await _task.onComplete).ref?.getDownloadURL();
     }
-    _map[_screenshot] = (_path ?? '');
+    _map[_screenshot] = _path ?? '';
 
     // Set all values (_map) into Firebase Realtime Database
-    // with an index as a number (_id).
+    // with a number (_id) as an index.
     _feedbackSchema.child(_id).set(_map).then((_) {
       _FeedbackFieldIOS._email = '';
       _FeedbackFieldIOS._feedback = '';
@@ -1219,8 +1653,8 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
     _emailController.removeListener(_cursorSendIconColor);
     _feedbackController.removeListener(_cursorSendIconColor);
     _emailController.dispose();
-    _feedbackController.dispose();
     _emailFocus.dispose();
+    _feedbackController.dispose();
     _feedbackFocus.dispose();
     super.dispose();
   }
@@ -1284,81 +1718,140 @@ class _FeedbackWidgetState extends State<_FeedbackWidget> {
   }
 }
 
-class _CardWidget extends StatelessWidget {
-  _CardWidget(int i, List list, [String category])
-      : _index = i,
-        _items = list,
-        _category = category;
+class _InfoWidget extends StatelessWidget {
+  _InfoWidget(bool isFavoritePage, AsyncSnapshot snapshot, List list)
+      : _isFavoritePage = isFavoritePage,
+        _snapshot = snapshot,
+        _list = list;
 
-  final int _index;
-  final List<CardData> _items;
-  final String _category;
+  final bool _isFavoritePage;
+  final AsyncSnapshot _snapshot;
+  final List _list;
 
   @override
   Widget build(BuildContext context) {
-    bool _hasCategory = (_category != null && _category.trim().isNotEmpty);
-    String _text =
-        (_items[_index].name == null || _items[_index].name.trim().isEmpty)
-            ? _items[_index].keyword
-            : _items[_index].name;
-    return Card(
-      child: Stack(
-        children: <Widget>[
-          (!_hasCategory)
-              ? Positioned.fill(
-                  child: Padding(
-                    child: Column(
-                      children: <Widget>[
-                        Expanded(
-                          child: Image.network(
-                            Provider().createImageUrl(_items[_index]),
-                          ),
-                        ),
-                        Padding(
-                          child: Text(
-                            _items[_index].name,
-                            style: Catalog()._textStyleCard(true),
-                          ),
-                          padding: EdgeInsets.only(bottom: 11.0, top: 11.0),
-                        ),
-                      ],
-                    ),
-                    padding: EdgeInsets.only(top: 19.0),
-                  ),
-                ) // IndexCard
-              : Padding(
-                  child: Column(
-                    children: <Widget>[
-                      Padding(
-                        child: Image.network(
-                          Provider().createImageUrl(_items[_index], _category),
-                        ),
-                        padding: EdgeInsets.only(
-                          bottom: 15.0,
-                          left: 16.0,
-                          right: 16.0,
-                          top: 18.0,
-                        ),
+    TextStyle _display1 = Theme.of(context).textTheme.display1.copyWith(
+          color: CupertinoColors.inactiveGray,
+          fontSize: 27.0,
+          letterSpacing: (!Platform.isIOS) ? null : 0.25,
+        );
+    return Center(
+      child: (_isFavoritePage && _snapshot.hasData && _list.isEmpty)
+          ? Text(
+              LocalizationData.of(context, Tag.favorite3),
+              style: _display1,
+            )
+          : (_snapshot.hasData && _list.isEmpty)
+              ? RichText(
+                  text: TextSpan(
+                    children: <TextSpan>[
+                      TextSpan(
+                        style: _display1,
+                        text: LocalizationData.of(context, Tag.home),
                       ),
-                      Row(
-                        children: Catalog().toSplitString(true, _text),
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      TextSpan(text: '\n\n'),
+                      TextSpan(
+                        style: TextStyle(color: Colors.grey),
+                        text: LocalizationData.of(context, Tag.feedback15),
                       ),
                     ],
                   ),
-                  padding: EdgeInsets.all(15.0),
-                ), // ObjectCard
-          _RippleCardEffect(
-            (!_hasCategory) ? _items[_index].name : _items[_index].keyword,
-            _category,
-          ),
-        ],
-      ),
-      elevation: 0.5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(38.0),
-        side: BorderSide(color: Colors.blue, width: 2.0),
-      ),
+                  textAlign: TextAlign.center,
+                )
+              : (!_snapshot.hasData &&
+                      (_snapshot?.connectionState == ConnectionState.waiting))
+                  ? Column(
+                      children: <Widget>[
+                        (!Platform.isIOS)
+                            ? CircularProgressIndicator()
+                            : CupertinoActivityIndicator(),
+                        Container(height: 20.0),
+                        Text(
+                          LocalizationData.of(context, Tag.feedback15),
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                      mainAxisSize: MainAxisSize.min,
+                    )
+                  : (!Platform.isIOS)
+                      ? CircularProgressIndicator()
+                      : CupertinoActivityIndicator(),
+    );
+  }
+}
+
+class _MarqueeWidget extends StatefulWidget {
+  _MarqueeWidget({
+    this.direction: Axis.horizontal,
+    this.animationDuration: const Duration(seconds: 10),
+    this.pauseDuration: const Duration(seconds: 2),
+    @required this.child,
+  });
+
+  final Axis direction;
+  final Duration animationDuration, pauseDuration;
+  final Widget child;
+
+  @override
+  _MarqueeWidgetState createState() => _MarqueeWidgetState();
+}
+
+class _MarqueeWidgetState extends State<_MarqueeWidget> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(() => _scrollListener());
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() => _scrollListener());
+    _scroll();
+  }
+
+  void _scroll() async {
+    while (true) {
+      await Future.delayed(widget.pauseDuration);
+      if (_scrollController.hasClients) {
+        await _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          curve: Curves.linear,
+          duration: widget.animationDuration,
+        );
+      }
+    }
+  }
+
+  void _scrollListener() {
+    // Optimized for any devices with screen sizes between
+    // 4.0" (inclusive) to 4.7" (exclusive) only.
+    double _delimiter = _scrollController.position.maxScrollExtent;
+    if (_delimiter >= 400.0) {
+      _delimiter -= _delimiter * 0.15;
+    } else if ((_delimiter >= 350.0) && (_delimiter < 400.0)) {
+      _delimiter -= _delimiter * 0.08;
+    } else if ((_delimiter >= 333.0) && (_delimiter < 350.0)) {
+      _delimiter -= _delimiter * 0.06;
+    } else if ((_delimiter >= 325.0) && (_delimiter < 333.0)) {
+      _delimiter -= _delimiter * 0.05;
+    } else {
+      _delimiter -= _delimiter * 0.03;
+    }
+    if (_scrollController.position.pixels >= _delimiter) {
+      _scrollController.jumpTo(0.0);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: widget.child,
+      controller: _scrollController,
+      scrollDirection: widget.direction,
     );
   }
 }
@@ -1371,25 +1864,20 @@ class _RippleCardEffect extends StatelessWidget {
   final String _category, _message;
 
   void _launchAppAndroid(BuildContext context) async {
-    String _message = LocalizationData.of(context, Tag.toast), _url;
+    String _content, _url;
     switch (_category) {
       case ConstantData.eating:
       case ConstantData.going:
-        _message += ConstantData.gmaps;
+        _content = ConstantData.gmaps;
         _url = ConstantData().gmapsUrl + _query;
         break;
       case ConstantData.listening:
       case ConstantData.watching:
-        _message += ConstantData.youtube;
+        _content = ConstantData.youtube;
         _url = ConstantData().youtubeUrl + _query;
         break;
     }
-    if (await canLaunch(_url)) {
-      Fluttertoast.showToast(msg: _message);
-      await launch(_url);
-    } else {
-      Catalog()._showAlertErrorDialog(context, _url, false);
-    }
+    _SearchListTile.override()._displayConfirmDialog(context, _content, _url);
   }
 
   @override
@@ -1399,17 +1887,26 @@ class _RippleCardEffect extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.all(Radius.circular(40.0)),
           onTap: () {
-            bool _hasCategory =
-                (_category != null && _category.trim().isNotEmpty);
+            bool _hasCategory = [
+                  ConstantData.eating,
+                  ConstantData.going,
+                  ConstantData.listening,
+                  ConstantData.watching,
+                ].contains(_category?.trim()) ??
+                false;
             if (_hasCategory) _query = _message;
             (!Platform.isIOS && _hasCategory)
                 ? _launchAppAndroid(context)
-                : Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => Provider().passData(_message, _category),
-                    ),
-                  );
+                : (!_hasCategory && (_category?.trim()?.isNotEmpty ?? false))
+                    ? {}
+                    : Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              Provider().passData(_message, _category),
+                        ),
+                      );
+            _CardWidget._keys.forEach((key) => key.currentState?.close());
           },
           splashColor: Color.fromARGB(30, 100, 100, 100),
         ),
@@ -1427,7 +1924,7 @@ class _SearchAlertDialog extends StatelessWidget {
   final BuildContext _context;
   final String _content;
 
-  void _selectAppStoreUrl() async {
+  void _selectAppStoreUrl() {
     String _url;
     switch (_content) {
       case 'Google ${ConstantData.chrome}':
@@ -1440,13 +1937,12 @@ class _SearchAlertDialog extends StatelessWidget {
         _url = ConstantData().youtubeAppStoreUrl;
         break;
     }
-    (await canLaunch(_url))
-        ? await launch(_url)
-        : Catalog()._showAlertErrorDialog(_context, _url, false);
+    _SearchListTile.override()._launchUrl(_context, _url);
   }
 
   @override
   Widget build(BuildContext context) {
+    FlutterStatusbarcolor.setStatusBarColor(Colors.transparent);
     return CupertinoAlertDialog(
       actions: <Widget>[
         Divider(color: Colors.black45, height: 0.5),
@@ -1464,7 +1960,7 @@ class _SearchAlertDialog extends StatelessWidget {
                 child: InkWell(
                   onTap: () {
                     _selectAppStoreUrl();
-                    Navigator.pop(context);
+                    _BottomDrawer()._onWillPop(context);
                   },
                   splashColor: Colors.transparent,
                 ),
@@ -1490,7 +1986,7 @@ class _SearchAlertDialog extends StatelessWidget {
             Positioned.fill(
               child: Material(
                 child: InkWell(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () => _BottomDrawer()._onWillPop(context),
                   splashColor: Colors.transparent,
                 ),
                 color: Colors.transparent,
@@ -1524,7 +2020,90 @@ class _SearchListTile extends StatelessWidget {
   static String _category, _content;
   static var _parent;
 
-  _searchListTileStaticList() async {
+  List<Widget> _searchListTileDynamicList() {
+    _searchListTileStaticList();
+    Timer(
+      Duration(microseconds: 1),
+      () => ((_parent.mounted) ? _parent.setState(() {}) : {}),
+    );
+    return _finalList;
+  }
+
+  void _displayConfirmDialog(BuildContext context, String content, String url) {
+    showDialog(
+      barrierDismissible: false,
+      builder: (_) => _ConfirmDialog(context, content, url),
+      context: context,
+    );
+  }
+
+  void _launchAppIOS(BuildContext context) async {
+    String _path = Uri.encodeFull(_query);
+    switch (_title) {
+      case ConstantData.amaps:
+        _displayConfirmDialog(
+          context,
+          ConstantData.amaps,
+          ConstantData().amapsUrl + _path,
+        );
+        break;
+      case ConstantData.gmaps:
+        (await canLaunch(ConstantData().gmapsApp))
+            ? _displayConfirmDialog(
+                context,
+                ConstantData.gmaps,
+                ConstantData().gmapsApp + _path,
+              )
+            : Catalog()._showAlertErrorDialog(
+                context,
+                ConstantData.gmaps,
+              );
+        break;
+      case ConstantData.chrome:
+        (await canLaunch(ConstantData().chromeApp))
+            ? _displayConfirmDialog(
+                context,
+                'Google ${ConstantData.chrome}',
+                ConstantData().chromeApp + _content.substring(8) + _path,
+              )
+            : Catalog()._showAlertErrorDialog(
+                context,
+                'Google ${ConstantData.chrome}',
+              );
+        break;
+      case ConstantData.safari:
+        _displayConfirmDialog(
+          context,
+          ConstantData.safari,
+          _content + _path,
+        );
+        break;
+      case ConstantData.youtube:
+        (await canLaunch(ConstantData().youtubeApp))
+            ? _displayConfirmDialog(
+                context,
+                ConstantData.youtube,
+                ConstantData().youtubeApp + _path,
+              )
+            : Catalog()._showAlertErrorDialog(
+                context,
+                ConstantData.youtube,
+              );
+        break;
+    }
+  }
+
+  void _launchUrl(BuildContext context, String url,
+      {bool forceSafariVC, String message}) async {
+    if (await canLaunch(url)) {
+      if (!Platform.isIOS) Fluttertoast.showToast(msg: message);
+      await launch(url, forceSafariVC: forceSafariVC);
+    } else {
+      Catalog()._showAlertErrorDialog(context, url, false);
+    }
+  }
+
+  void _searchListTileStaticList() async {
     var _list = List<Widget>();
     switch (_category) {
       case ConstantData.eating:
@@ -1556,65 +2135,6 @@ class _SearchListTile extends StatelessWidget {
         break;
     }
     _finalList = _list;
-  }
-
-  List<Widget> _searchListTileDynamicList() {
-    Timer(
-      Duration(microseconds: 1),
-      () {
-        if (_parent.mounted) {
-          _parent.setState(() {
-            _searchListTileStaticList();
-          });
-        }
-      },
-    );
-    return _finalList;
-  }
-
-  void _launchAppIOS(BuildContext context) async {
-    String _path = Uri.encodeFull(_query);
-    switch (_title) {
-      case ConstantData.amaps:
-        _launchUrl(context, ConstantData().amapsUrl + _path);
-        break;
-      case ConstantData.gmaps:
-        (await canLaunch(ConstantData().gmapsApp))
-            ? _launchUrl(context, ConstantData().gmapsApp + _path)
-            : Catalog()._showAlertErrorDialog(
-                context,
-                ConstantData.gmaps,
-              );
-        break;
-      case ConstantData.chrome:
-        (await canLaunch(ConstantData().chromeApp))
-            ? _launchUrl(
-                context,
-                ConstantData().chromeApp + _content.substring(8) + _path,
-              )
-            : Catalog()._showAlertErrorDialog(
-                context,
-                'Google ${ConstantData.chrome}',
-              );
-        break;
-      case ConstantData.safari:
-        _launchUrl(context, _content + _path);
-        break;
-      case ConstantData.youtube:
-        (await canLaunch(ConstantData().youtubeApp))
-            ? _launchUrl(context, ConstantData().youtubeApp + _path)
-            : Catalog()._showAlertErrorDialog(
-                context,
-                ConstantData.youtube,
-              );
-        break;
-    }
-  }
-
-  void _launchUrl(BuildContext context, String url) async {
-    (await canLaunch(url))
-        ? await launch(url, forceSafariVC: false)
-        : Catalog()._showAlertErrorDialog(context, url, false);
   }
 
   @override
@@ -1676,8 +2196,8 @@ class _SystemInfoListTileState extends State<_SystemInfoListTile> {
 
   final BuildContext _context;
   final String _content;
-  static String _appName = '?',
-      _appIdentifier = '?',
+  static String _appIdentifier = '?',
+      _appName = '?',
       _appVersion = '?',
       _batteryLevel = '?',
       _batteryState = '?',
@@ -1691,8 +2211,9 @@ class _SystemInfoListTileState extends State<_SystemInfoListTile> {
     _dateTime = Provider().fetchDateTime(context);
     for (int _i = 0; _i < Tag.values.length; _i++) {
       for (int _j = 0; _j < 9; _j++) {
-        if (Tag.values[_i].toString().contains('sysinfo${_j.toString()}'))
+        if (Tag.values[_i].toString() == 'sysinfo${_j.toString()}') {
           _tags.add(Tag.values[_i]);
+        }
       }
     }
     for (int _i = 0; _i < _tags.length * 2; _i++) {
@@ -1793,7 +2314,7 @@ class _SystemInfoListTileState extends State<_SystemInfoListTile> {
 }
 
 class _UploadDialog extends StatelessWidget {
-  _UploadDialog(this._task);
+  _UploadDialog(StorageUploadTask task) : _task = task;
 
   final StorageUploadTask _task;
   static double _progress = 0.0;
@@ -1842,8 +2363,8 @@ class _UploadDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<StorageTaskEvent>(
-      builder: (context, asyncSnapshot) {
+    return StreamBuilder(
+      builder: (context, snapshot) {
         // A comparison table on StorageUploadTask (_task) status,
         // AsyncSnapshot and StorageTaskEventType information.
         //          | isComplete | isCanceled | isSuccessful | hasData |   type
@@ -1855,21 +2376,21 @@ class _UploadDialog extends StatelessWidget {
         bool _isError = (_task.isComplete &&
             !_task.isCanceled &&
             !_task.isSuccessful &&
-            asyncSnapshot.hasData &&
-            (asyncSnapshot.data?.type == StorageTaskEventType.failure));
+            snapshot.hasData &&
+            (snapshot.data?.type == StorageTaskEventType.failure));
         IconData _icon = (_isError)
             ? Icons.warning
             : (_task.isSuccessful) ? Icons.done : Icons.file_upload;
         String _subtitle = (_isError)
                 ? LocalizationData.of(context, Tag.feedback13)
-                : (!asyncSnapshot.hasData)
+                : (!snapshot.hasData)
                     ? LocalizationData.of(context, Tag.feedback15)
-                    : _bytesTransferred(asyncSnapshot.data.snapshot),
+                    : _bytesTransferred(snapshot.data.snapshot),
             _title = (_isError)
                 ? LocalizationData.of(context, Tag.feedback12)
                 : (_task.isSuccessful)
                     ? LocalizationData.of(context, Tag.feedback16)
-                    : (!asyncSnapshot.hasData)
+                    : (!snapshot.hasData)
                         ? LocalizationData.of(context, Tag.feedback14)
                         : LocalizationData.of(context, Tag.feedback11);
         if (_task.isCanceled || _isError) _task.cancel();
@@ -1900,7 +2421,7 @@ class _UploadDialog extends StatelessWidget {
                                 .setNetworkActivityIndicatorVisible(false);
                             Navigator.maybePop(context);
                           },
-                        )
+                        ),
                       ],
                 content: Column(
                   children: <Widget>[

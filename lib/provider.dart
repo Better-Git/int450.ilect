@@ -1,9 +1,11 @@
+// Copyright 2018 School of Information Technology, KMUTT. All rights reserved.
+
 import 'dart:async' show Stream;
-import 'dart:io' show InternetAddress, Platform;
+import 'dart:io' show InternetAddress, Platform, SocketException;
 
 import 'package:connectivity/connectivity.dart';
 import 'package:firebase_database/firebase_database.dart'
-    show DataSnapshot, Event, FirebaseDatabase;
+    show DatabaseReference, Event, FirebaseDatabase;
 import 'package:flutter/foundation.dart' show SynchronousFuture;
 import 'package:flutter/material.dart'
     show
@@ -20,25 +22,20 @@ import 'package:flutter/material.dart'
 import 'package:intl/intl.dart' show DateFormat;
 
 import 'catalog.dart';
-import 'main.dart'
-    show
-        FeedbackPage,
-        PrivacyPolicyPage,
-        SecondPage,
-        SystemInfoPage,
-        ThirdPage,
-        ServiceTermsPage;
+import 'main.dart';
 
 class CardData {
-  String id, keyword, name, pic, token;
-
-  CardData.fromSnapshot(DataSnapshot snapshot) {
-    id = snapshot.key;
-    keyword = snapshot.value['search'];
-    name = snapshot.value['name'];
-    pic = snapshot.value['pic'];
-    token = snapshot.value['token'];
+  CardData.fromMap(int i, Map map) {
+    id = i.toString();
+    map.forEach((key, value) {
+      keyword = map['search'];
+      name = map['name'];
+      pic = map['pic'];
+      token = map['token'];
+    });
   }
+
+  String id, keyword, name, pic, token;
 }
 
 class ConstantData {
@@ -57,6 +54,7 @@ class ConstantData {
       youtube = 'YouTube';
   final
       // Page instances
+      favoritePage = FavoritePage(),
       feedbackPage = FeedbackPage(),
       privacyPage = PrivacyPolicyPage(),
       servicePage = ServiceTermsPage(),
@@ -99,13 +97,6 @@ class ConstantData {
       youtubeAppStoreUrl =
           'https://itunes.apple.com/us/app/youtube-watch-listen-stream/id544007664?mt=8',
       youtubeUrl = 'https://www.youtube.com/results?search_query=',
-
-      // Firebase database schema titles
-      schema0 = 'category',
-      schema1 = 'eat',
-      schema2 = 'go',
-      schema3 = 'listen',
-      schema4 = 'watch',
 
       // Font asset
       font = 'EucrosiaUPC',
@@ -153,6 +144,16 @@ class ConstantData {
       errorDialogTitle0TH = 'ข้อผิดพลาด',
       errorDialogTitle1 = 'No Internet Connection',
       errorDialogTitle1TH = 'ไม่มีการเชื่อมต่ออินเทอร์เน็ต',
+      favoriteButton0 = 'Favorites',
+      favoriteButton0TH = 'รายการโปรด',
+      favoriteButton1 = '\nRemove\nfrom\n',
+      favoriteButton1TH = '\nเอาออกจาก\n',
+      favoriteButton2 = '\nAdd to\n',
+      favoriteButton2TH = '\nเพิ่มลงใน\n',
+      favoritePage0 = 'No ',
+      favoritePage0TH = 'ไม่มี',
+      favoriteInfo = 'List is sorted by category.',
+      favoriteInfoTH = 'รายการถูกแบ่งออกตามหมวดหมู่',
       feedbackDialog0 = 'Your address is invalid.',
       feedbackDialog0TH = 'ที่อยู่อีเมลของคุณไม่ถูกต้อง',
       feedbackDialog1 = 'Invalid public IP address.',
@@ -205,6 +206,8 @@ class ConstantData {
       feedbackTooltipTH = 'ส่ง',
       firebaseSlash = '%2F',
       firebaseToken = '?alt=media&token=',
+      homePage0 = 'We are updating\nour database',
+      homePage0TH = 'เรากำลังอัพเดท\nฐานข้อมูลอยู่',
       homeSnackBar = 'Thank you for the feedback',
       homeSnackBarTH = 'ขอบคุณสำหรับความคิดเห็น',
       objectToast = 'Open ',
@@ -247,7 +250,7 @@ class ConstantData {
       sysinfoListTileTitle8TH = 'ภาษา',
       timeFormat = ' HH:mm:ss ',
       timeFormatTH = ' H นาฬิกา m นาที s วินาที ',
-      version = '0.8',
+      version = '0.8.1',
 
       // Page titles
       feedback = 'Send Feedback',
@@ -263,10 +266,10 @@ class ConstantData {
 }
 
 class LocalizationData {
-  LocalizationData(this._locale);
+  LocalizationData(Locale locale) : _locale = locale;
 
   final Locale _locale;
-  Map<String, Map<Tag, String>> _localizedValues = {
+  final Map<String, Map<Tag, String>> _localizedValues = {
     'en': {
       Tag.battery0: ConstantData().batteryState0,
       Tag.battery1: ConstantData().batteryState1,
@@ -275,6 +278,12 @@ class LocalizationData {
       Tag.error0: ConstantData().errorDialogTitle0,
       Tag.error1: ConstantData().errorDialog0,
       Tag.error2: ConstantData().errorDialog4,
+      Tag.favorite: ConstantData().favoriteButton0,
+      Tag.favorite0: ConstantData().favoriteInfo,
+      Tag.favorite1: ConstantData().favoriteButton1,
+      Tag.favorite2: ConstantData().favoriteButton2,
+      Tag.favorite3:
+          ConstantData().favoritePage0 + ConstantData().favoriteButton0,
       Tag.feedback: ConstantData().feedback,
       Tag.feedback0: (!Platform.isIOS)
           ? ConstantData().feedbackPage0
@@ -299,6 +308,7 @@ class LocalizationData {
       Tag.feedback16: ConstantData().feedbackDialogTitle3,
       Tag.formatDate: ConstantData().dateFormat,
       Tag.formatTime: ConstantData().timeFormat,
+      Tag.home: ConstantData().homePage0,
       Tag.privacy: ConstantData().privacy,
       Tag.search: ConstantData().search,
       Tag.search0: ConstantData().searchAlertDialogTitle,
@@ -339,6 +349,12 @@ class LocalizationData {
       Tag.error0: ConstantData().errorDialogTitle0TH,
       Tag.error1: ConstantData().errorDialog0TH,
       Tag.error2: ConstantData().errorDialog4TH,
+      Tag.favorite: ConstantData().favoriteButton0TH,
+      Tag.favorite0: ConstantData().favoriteInfoTH,
+      Tag.favorite1: ConstantData().favoriteButton1TH,
+      Tag.favorite2: ConstantData().favoriteButton2TH,
+      Tag.favorite3:
+          ConstantData().favoritePage0TH + ConstantData().favoriteButton0TH,
       Tag.feedback: ConstantData().feedbackTH,
       Tag.feedback0: ConstantData().feedbackPage0TH,
       Tag.feedback1: ConstantData().feedbackPage1TH,
@@ -361,6 +377,7 @@ class LocalizationData {
       Tag.feedback16: ConstantData().feedbackDialogTitle3TH,
       Tag.formatDate: ConstantData().dateFormatTH,
       Tag.formatTime: ConstantData().timeFormatTH,
+      Tag.home: ConstantData().homePage0TH,
       Tag.privacy: ConstantData().privacyTH,
       Tag.search: ConstantData().searchTH,
       Tag.search0: ConstantData().searchAlertDialogTitleTH,
@@ -394,11 +411,130 @@ class LocalizationData {
       Tag.warning3: ConstantData().errorDialog3TH,
     },
   };
+  static final String _category = ConstantData()
+      .favoriteInfo
+      .substring(18, ConstantData().favoriteInfo.length - 1);
 
   static String of(BuildContext context, Tag tag) =>
       Localizations.of<LocalizationData>(context, LocalizationData)._get(tag);
 
   String _get(Tag tag) => _localizedValues[_locale.languageCode][tag];
+}
+
+class LocalizationDataDelegate extends LocalizationsDelegate<LocalizationData> {
+  // Returning a SynchronousFuture here because an async "load" operation
+  // isn't needed to produce an instance of LocalizationData.
+  @override
+  load(Locale locale) =>
+      SynchronousFuture<LocalizationData>(LocalizationData(locale));
+
+  @override
+  bool isSupported(Locale locale) => ['en', 'th'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(LocalizationDataDelegate old) => false;
+}
+
+class Provider {
+  bool isEN(BuildContext context) =>
+      Localizations.localeOf(context).languageCode.contains('en');
+
+  DatabaseReference cardDataDatabaseReference(String schema) =>
+      FirebaseDatabase.instance.reference().child(schema);
+
+  StatefulWidget passData(String message, [String category]) {
+    return (category?.trim()?.isEmpty ?? true)
+        ? SecondPage(category: message)
+        : ThirdPage(category: category, name: message);
+  }
+
+  Stream<Event> cardDataStream([String name]) {
+    return cardDataDatabaseReference(
+      (name?.trim()?.isEmpty ?? true)
+          ? LocalizationData._category
+          : selectSchema(name) ?? name,
+    ).onValue;
+  }
+
+  String createImageUrl(CardData cardData, [String category]) {
+    return [
+      ConstantData().firebaseUrl,
+      (category?.trim()?.isEmpty ?? true)
+          ? LocalizationData._category
+          : selectSchema(category) ?? category,
+      ConstantData().firebaseSlash,
+      cardData.pic,
+      ConstantData().firebaseToken,
+      cardData.token,
+    ].join();
+  }
+
+  String fetchDateTime(BuildContext context) {
+    return DateFormat(LocalizationData.of(context, Tag.formatDate)).format(
+          DateTime.now(),
+        ) +
+        ((Localizations.localeOf(context).languageCode == 'th')
+            ? (DateTime.now().year + 543).toString().substring(2)
+            : '') +
+        DateFormat(LocalizationData.of(context, Tag.formatTime)).format(
+          DateTime.now(),
+        ) +
+        'GMT' +
+        DateTime.now().timeZoneName.substring(0, 1) +
+        int.parse(DateTime.now().timeZoneName.substring(1)).toString();
+  }
+
+  String selectSchema(String category) {
+    HomePage.list
+        .where((item) => item.name == category)
+        .forEach((item) => category = item.keyword);
+    return category;
+  }
+
+  void checkInternet(BuildContext context) async {
+    try {
+      await InternetAddress.lookup(ConstantData().testUrl).timeout(
+        Duration(seconds: 2),
+      );
+    } on SocketException {
+      ConnectivityResult _result = await Connectivity().checkConnectivity();
+      String _connection;
+      (!Platform.isIOS && (_result == ConnectivityResult.none))
+          ? _connection = LocalizationData.of(context, Tag.warning2)
+          : _connection = LocalizationData.of(context, Tag.warning3);
+      Catalog().showWarningDialog(
+        context,
+        LocalizationData.of(context, Tag.warning1) + _connection,
+        title: LocalizationData.of(context, Tag.warning0),
+      );
+    }
+  }
+}
+
+class ProviderThemeData {
+  ProviderThemeData([Color color]) {
+    _color = color;
+    _theme();
+  }
+
+  Color _color = ConstantData().defaultColor;
+  ThemeData theme;
+
+  void _theme() {
+    theme = ThemeData(
+      canvasColor: Color(0xFFFFFFFF),
+      cursorColor: _color,
+      primaryColor: Color(0xFFFFFFFF),
+      primaryTextTheme: TextTheme(
+        body1: TextStyle(color: Color(0xFFFFFFFF)),
+        title: (Platform.isIOS) ? null : TextStyle(fontWeight: FontWeight.w500),
+      ),
+      textTheme: TextTheme(
+        button: TextStyle(fontWeight: FontWeight.w500),
+        title: TextStyle(fontWeight: FontWeight.w500),
+      ),
+    );
+  }
 }
 
 enum Tag {
@@ -409,6 +545,11 @@ enum Tag {
   error0,
   error1,
   error2,
+  favorite,
+  favorite0,
+  favorite1,
+  favorite2,
+  favorite3,
   feedback,
   feedback0,
   feedback1,
@@ -429,6 +570,7 @@ enum Tag {
   feedback16,
   formatDate,
   formatTime,
+  home,
   privacy,
   search,
   search0,
@@ -457,122 +599,4 @@ enum Tag {
   warning1,
   warning2,
   warning3,
-}
-
-class LocalizationsDataDelegate
-    extends LocalizationsDelegate<LocalizationData> {
-  // Returning a SynchronousFuture here because an async "load" operation
-  // isn't needed to produce an instance of LocalizationData.
-  @override
-  load(Locale locale) =>
-      SynchronousFuture<LocalizationData>(LocalizationData(locale));
-
-  @override
-  bool isSupported(Locale locale) => ['en', 'th'].contains(locale.languageCode);
-
-  @override
-  bool shouldReload(LocalizationsDataDelegate old) => false;
-}
-
-class Provider {
-  bool isEN(BuildContext context) =>
-      Localizations.localeOf(context).languageCode.contains('en');
-
-  StatefulWidget passData(String message, [String category]) {
-    return (category == null || category.trim().isEmpty)
-        ? SecondPage(category: message)
-        : ThirdPage(category: category, name: message);
-  }
-
-  Stream<Event> cardDataStreamSubscription(String schema) =>
-      FirebaseDatabase.instance.reference().child(schema).onChildAdded;
-
-  String createImageUrl(CardData cardData, [String category]) {
-    return [
-      ConstantData().firebaseUrl,
-      (category == null || category.trim().isEmpty)
-          ? ConstantData().schema0
-          : selectSchema(category),
-      ConstantData().firebaseSlash,
-      cardData.pic,
-      ConstantData().firebaseToken,
-      cardData.token,
-    ].join();
-  }
-
-  String fetchDateTime(BuildContext context) {
-    return DateFormat(LocalizationData.of(context, Tag.formatDate)).format(
-          DateTime.now(),
-        ) +
-        ((Localizations.localeOf(context).languageCode == 'th')
-            ? (DateTime.now().year + 543).toString().substring(2)
-            : '') +
-        DateFormat(LocalizationData.of(context, Tag.formatTime)).format(
-          DateTime.now(),
-        ) +
-        'GMT' +
-        DateTime.now().timeZoneName.substring(0, 1) +
-        int.parse(DateTime.now().timeZoneName.substring(1)).toString();
-  }
-
-  String selectSchema(String category) {
-    switch (category) {
-      case ConstantData.eating:
-        category = ConstantData().schema1;
-        break;
-      case ConstantData.going:
-        category = ConstantData().schema2;
-        break;
-      case ConstantData.listening:
-        category = ConstantData().schema3;
-        break;
-      case ConstantData.watching:
-        category = ConstantData().schema4;
-        break;
-    }
-    return category;
-  }
-
-  void checkInternet(BuildContext context) async {
-    try {
-      await InternetAddress.lookup(ConstantData().testUrl).timeout(
-        Duration(seconds: 2),
-      );
-    } on Exception {
-      ConnectivityResult _result = await Connectivity().checkConnectivity();
-      String _connection;
-      (!Platform.isIOS && (_result == ConnectivityResult.none))
-          ? _connection = LocalizationData.of(context, Tag.warning2)
-          : _connection = LocalizationData.of(context, Tag.warning3);
-      Catalog().showWarningDialog(
-        context,
-        LocalizationData.of(context, Tag.warning1) + _connection,
-        title: LocalizationData.of(context, Tag.warning0),
-      );
-    }
-  }
-}
-
-class ProviderThemeData {
-  ProviderThemeData([this._color]) {
-    _theme();
-  }
-
-  Color _color = ConstantData().defaultColor;
-  ThemeData theme;
-
-  void _theme() {
-    theme = ThemeData(
-      cursorColor: _color,
-      primaryColor: Color(0xFFFFFFFF),
-      primaryTextTheme: TextTheme(
-        body1: TextStyle(color: Color(0xFFFFFFFF)),
-        title: (Platform.isIOS) ? null : TextStyle(fontWeight: FontWeight.w500),
-      ),
-      textTheme: TextTheme(
-        button: TextStyle(fontWeight: FontWeight.w500),
-        title: TextStyle(fontWeight: FontWeight.w500),
-      ),
-    );
-  }
 }

@@ -1,20 +1,29 @@
 {
   "category" : [ null, {
     "name" : "กิน",
-    "pic" : "eat.png",
-    "token" : "e220fd4f-4212-46c3-aa49-02f169a99580"
+    "pic" : "eat0.jpg",
+    "search" : "eat",
+    "token" : "e0c56ac4-dd3d-4c02-ae89-1068ddbe19b9"
   }, {
     "name" : "ไป",
-    "pic" : "go.jpg",
-    "token" : "176998fe-d2e6-4875-ab37-282f96228952"
+    "pic" : "go0.png",
+    "search" : "go",
+    "token" : "d50dae99-6fe4-430f-b167-72677135e42f"
   }, {
     "name" : "ฟัง",
-    "pic" : "listen.jpg",
-    "token" : "02ac67a1-ea38-4394-a902-2e854306cb2d"
+    "pic" : "listen0.jpg",
+    "search" : "listen",
+    "token" : "658021be-8f5b-40fb-ba7a-e491260ff9b0"
   }, {
     "name" : "ดู",
-    "pic" : "watch.png",
-    "token" : "6d4c0374-2cfc-46c2-b768-996bc38557ed"
+    "pic" : "watch0.png",
+    "search" : "watch",
+    "token" : "ceac082f-12a0-45e6-beb6-dc0edda5ffd8"
+  }, {
+    "name" : "เล่น",
+    "pic" : "play.jpg",
+    "search" : "play",
+    "token" : "6a7ad1b7-053a-4522-9038-8a4f332b72cd"
   } ],
   "eat" : [ null, {
     "name" : "KFC",
@@ -273,40 +282,15 @@
     "search" : "สวนน้ำที่ใกล้ที่สุด",
     "token" : "2ac74b92-902b-4790-bf13-101e63fae6b3"
   }, {
-    "name" : "ว่ายน้ำ",
-    "pic" : "Swimming.png",
-    "search" : "สระว่ายน้ำที่ใกล้ที่สุด",
-    "token" : "558766f1-086f-4ec4-96f3-e90ff5a42451"
+    "name" : "ทะเล",
+    "pic" : "sea.png",
+    "search" : "ทะเล ที่ใกล้ที่สุด",
+    "token" : "f1a6cd5c-32b2-427e-b864-2746c89c22c0"
   }, {
-    "name" : "โยนโบว์ลิ่ง",
-    "pic" : "bawling.jpg",
-    "search" : "ที่โยนโบว์ลิ่งที่ใกล้ที่สุด",
-    "token" : "dfc31831-82f6-4270-aaf8-498c7c36492b"
-  }, {
-    "name" : "เล่นแบดมินตัน",
-    "pic" : "badminton.png",
-    "search" : "คอร์ดแบดมินตันที่ใกล้ที่สุด",
-    "token" : "3bad11a4-c5d9-46c9-b084-d312b6497be8"
-  }, {
-    "name" : "เล่นบาสเก็ตบอล",
-    "pic" : "basketball.jpg",
-    "search" : "สนามบาสเก็ตบอลที่ใกล้ที่สุด",
-    "token" : "8caa93c5-aed5-4599-b78a-fac6fb19b5d8"
-  }, {
-    "name" : "เล่นฟุตบอล",
-    "pic" : "football.jpg",
-    "search" : "สนามฟุตบอลที่ใกล้ที่สุด",
-    "token" : "82294bb5-2291-4e44-9105-3bc9e2aa7111"
-  }, {
-    "name" : "เล่นปิงปอง",
-    "pic" : "ping-pong.jpg",
-    "search" : "สนามปิงปองที่ใกล้ที่สุด",
-    "token" : "c067c79f-e32d-489f-8c25-32adb1fe25c2"
-  }, {
-    "name" : "เล่นเทนนิส",
-    "pic" : "tennis.jpg",
-    "search" : "สนามเทนนิสที่ใกล้ที่สุด",
-    "token" : "18d2f409-04c4-4844-8f15-e7e3ea7f6cbb"
+    "name" : "น้ำตก",
+    "pic" : "waterfalls.jpg",
+    "search" : "น้ำตก ที่ใกล้ที่สุด",
+    "token" : "a0190765-a77a-4e10-8bf8-1d0034f52d74"
   } ],
   "listen" : [ null, {
     "name" : "นิทาน",
@@ -333,6 +317,79 @@
     "pic" : "piano.jpg",
     "search" : "ดนตรีเปียโน",
     "token" : "19904883-c65c-410a-a336-7751fa2084fa"
+  } ],
+  "play" : [ null, {
+    "name" : "ตัวต่อเลโก้",
+    "pic" : "legos.jpg",
+    "token" : "3e79d3bb-6f33-4801-a047-28deb4de6327"
+  }, {
+    "name" : "บล็อคไม้",
+    "pic" : "Block.jpg",
+    "token" : "6f425065-0373-45b0-b3f9-fedbe86e24cc"
+  }, {
+    "name" : "อ่านหนังสือ",
+    "pic" : "read.jpg",
+    "token" : "21f76b81-243d-49f0-b8b4-4fa86c72c5e5"
+  }, {
+    "name" : "ต่อจิ๊กซอ",
+    "pic" : "Jigsaw.jpg",
+    "token" : "b99af021-a336-49b0-b37d-3d1ffe6f28e0"
+  }, {
+    "name" : "การ์ดคำศัพท์",
+    "pic" : "wordcard.jpg",
+    "token" : "6bed14e2-e9bc-4c23-82d6-5c8bfa77e6e6"
+  }, {
+    "name" : "หุ่นยนต์",
+    "pic" : "robot.jpg",
+    "token" : "6b12d24d-7063-4edb-b0f4-e4aa16438fbf"
+  }, {
+    "name" : "รถยนต์",
+    "pic" : "car.jpg",
+    "token" : "ebeb13aa-7fc6-47d8-bb5d-5ef30509ef95"
+  }, {
+    "name" : "หั่นผลไม้",
+    "pic" : "fruit.jpg",
+    "token" : "90e20b23-e8b1-42b7-b64b-cd4ae88a3d00"
+  }, {
+    "name" : "ขี่จักรยาน",
+    "pic" : "bike.png",
+    "token" : "29a097f6-c831-4fc9-aec6-e693de22d48f"
+  }, {
+    "name" : "เล่นหมากฮอส",
+    "pic" : "Checkers.png",
+    "token" : "34bfb951-29f7-4e8d-b289-194999f3db18"
+  }, {
+    "name" : "เล่นเกม",
+    "pic" : "game.png",
+    "token" : "81f84bb3-92e3-4b19-83b3-0cfaf8b125d4"
+  }, {
+    "name" : "ว่ายน้ำ",
+    "pic" : "Swimming.png",
+    "token" : "92f37f2a-6919-4bd7-b6fb-5ae84736d2a6"
+  }, {
+    "name" : "เล่นฟุตบอล",
+    "pic" : "football.jpg",
+    "token" : "a2929eec-1afe-4fce-a403-81a7fddcde6c"
+  }, {
+    "name" : "เล่นบาสเก็ตบอล",
+    "pic" : "basketball.jpg",
+    "token" : "37d88ff8-c89b-4835-a0c6-5563e58a8e6c"
+  }, {
+    "name" : "โยนโบว์ลิ่ง",
+    "pic" : "bawling.jpg",
+    "token" : "34bff6fe-14f8-4904-9bf6-5a7c64d580af"
+  }, {
+    "name" : "เล่นปิงปอง",
+    "pic" : "ping-pong.jpg",
+    "token" : "1a11eed3-6225-4c02-b266-71b5437d81d8"
+  }, {
+    "name" : "เล่นเทนนิส",
+    "pic" : "tennis.jpg",
+    "token" : "87974f12-44bd-4098-85f4-e80ce11739f7"
+  }, {
+    "name" : "ระบายสี",
+    "pic" : "color.jpg",
+    "token" : "1028d848-e439-47dd-9dc3-e87d2c9002fb"
   } ],
   "watch" : [ null, {
     "name" : "อะลาดินกับตะเกียงวิเศษ",
