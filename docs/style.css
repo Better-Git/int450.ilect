@@ -1,0 +1,119 @@
+a {
+    color: #2979FF;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    font-family: 'Roboto', 'Helvetica', sans-serif;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0;
+}
+
+@media screen and (min-width: 375px) and (max-width: 450px) {
+    .is-small-screen .mdl-layout__title span {
+        padding: 0px 10px;
+    }
+}
+
+@media screen and (min-width: 381px) {
+    .mdl-list {
+        width: 378px;
+    }
+}
+
+@media screen and (min-width: 395px) {
+    .mdl-list.th {
+        width: 398px !important;
+    }
+}
+
+@media screen and (max-width: 339px) {
+    .mdl-mini-footer__left-section.th {
+        width: 267px !important;
+    }
+}
+
+@media screen and (max-width: 374px) {
+    .mdl-list {
+        width: 300px;
+    }
+}
+
+@media screen and (max-width: 394px) {
+    .mdl-list.th {
+        width: 300px !important;
+    }
+}
+
+@media screen and (max-width: 463px) {
+    .mdl-mini-footer__left-section {
+        width: 333px !important;
+    }
+}
+
+.is-small-screen .mdl-layout__title span {
+    line-height: 1.6;
+}
+
+.is-small-screen .logo {
+    height: 100px;
+    width: 100px;
+}
+
+.mdl-switch.is-checked .mdl-switch__thumb {
+    background-color: #75a7ff;
+}
+
+.mdl-switch.is-checked .mdl-switch__track {
+    background: #004ecb;
+}
+
+.button {
+    background-color: #2979FF;
+    color: white;
+}
+
+.center {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px auto;
+}
+
+.footer {
+    margin: 0;
+    padding: 15px;
+}
+
+.logo {
+    background: url("https://raw.githubusercontent.com/Better-Git/int450.ilect/master/assets/icon.png") 50% no-repeat;
+    background-size: cover;
+    height: 150px;
+    width: 150px;
+    margin: auto;
+}
+
+.mdl-layout__title {
+    color: black;
+    font-size: 15px;
+    text-align: center;
+}
+
+.mdl-list {
+    margin: 0 auto;
+    padding: 0;
+}
+
+.mdl-list__item--three-line {
+    min-height: 120px !important;
+}
+
+.mdl-list__item-primary-content {
+    min-height: 80px !important;
+}
+
+.switch {
+    margin: 15px;
+    max-width: 50%;
+}

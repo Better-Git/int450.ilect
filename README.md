@@ -9,7 +9,8 @@ It's quick and easy to use just only let them choose what they need and our app 
 
 Total time we'd used to create this app until now are just only 369 working hours.
 
-## Screenshots
+## Screenshot
+<img src="https://github.com/Better-Git/int450.ilect/blob/master/assets/screenshot.gif?raw=true" alt="Screenshot"/>
 
 ## Getting Started
 

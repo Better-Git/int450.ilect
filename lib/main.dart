@@ -12,7 +12,6 @@ import 'package:flutter/services.dart'
 import 'package:flutter_localizations/flutter_localizations.dart'
     show GlobalMaterialLocalizations;
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 
 import 'catalog.dart';
@@ -24,13 +23,13 @@ class ILectApp extends StatelessWidget {
   // This widget is the application root.
   @override
   Widget build(BuildContext context) {
-    FlutterStatusbarcolor.setStatusBarColor(Colors.white);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitDown,
       DeviceOrientation.portraitUp,
     ]);
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.white,
         statusBarIconBrightness: Brightness.dark,
         systemNavigationBarColor: Colors.white,
         systemNavigationBarIconBrightness: Brightness.dark,
@@ -85,7 +84,14 @@ class PrivacyPolicyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(LocalizationData.of(context, Tag.privacy))),
-      body: Scrollbar(child: Center()),
+      body: Scrollbar(
+        child: SingleChildScrollView(
+          child: Padding(
+            child: Text(LocalizationData.of(context, Tag.privacy0)),
+            padding: EdgeInsets.all(10.0),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -105,7 +111,14 @@ class ServiceTermsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(LocalizationData.of(context, Tag.service))),
-      body: Scrollbar(child: Center()),
+      body: Scrollbar(
+        child: SingleChildScrollView(
+          child: Padding(
+            child: Text(LocalizationData.of(context, Tag.service0)),
+            padding: EdgeInsets.all(10.0),
+          ),
+        ),
+      ),
     );
   }
 }

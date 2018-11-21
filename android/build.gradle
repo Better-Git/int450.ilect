@@ -35,13 +35,13 @@ subprojects {
                 // "com.android.support:*:28.0.0" is now only compatible with
                 // a debug version (buildTypes -> debug) of the app.
                 //
-                details.useVersion "28.0.0"
+                // details.useVersion "28.0.0"
                 //
                 // To build, a release version (buildTypes -> release) of the app,
                 // please use "com.android.support:*:27.1.1" until the problem
                 // has been resolved.
                 //
-                // details.useVersion "27.1.1"
+                details.useVersion "27.1.1"
             }
         }
     }

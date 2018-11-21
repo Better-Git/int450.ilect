@@ -200,6 +200,15 @@ class _BottomAppBar extends StatelessWidget {
   final bool _isOverridden;
   final String _title;
 
+  void _share(BuildContext context) {
+    Share.share(LocalizationData.of(context, Tag.share));
+    FlutterStatusbarcolor.setStatusBarColor(Colors.transparent);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(
@@ -245,8 +254,7 @@ class _BottomAppBar extends StatelessWidget {
               (_isOverridden)
                   ? IconButton(
                       icon: Icon(Icons.share),
-                      onPressed: () =>
-                          Share.share(LocalizationData.of(context, Tag.share)),
+                      onPressed: () => _share(context),
                       tooltip: LocalizationData.of(context, Tag.tooltip1),
                     )
                   : IconButton(
@@ -2209,13 +2217,10 @@ class _SystemInfoListTileState extends State<_SystemInfoListTile> {
     var _items = List(), _tags = List();
     _staticInfo(context);
     _dateTime = Provider().fetchDateTime(context);
-    for (int _i = 0; _i < Tag.values.length; _i++) {
-      for (int _j = 0; _j < 9; _j++) {
-        if (Tag.values[_i].toString() == 'sysinfo${_j.toString()}') {
-          _tags.add(Tag.values[_i]);
-        }
-      }
-    }
+    Tag.values.forEach((tag) {
+      if (tag.toString().contains(Tag.sysinfo.toString())) _tags.add(tag);
+    });
+    _tags.remove(Tag.sysinfo);
     for (int _i = 0; _i < _tags.length * 2; _i++) {
       String _text;
       switch (_i) {

@@ -213,6 +213,39 @@ class ConstantData {
       objectToast = 'Open ',
       objectToastTH = 'เปิด ',
       offline = 'Offline Pictures',
+      privacyPage0 = 'This privacy policy was created by iLect application '
+          '(in this case will be used the words instead of saying, '
+          '"we", "us", or iLect), which is intended to protect and maintain the '
+          'privacy of the users of the application.\n\n'
+          '1. iLect values the trust you have given to us by providing your '
+          'personal information to. We will use your personal information in a way '
+          'that is fair and worthy of such trust.\n\n'
+          '2. You have the right to receive clear information about how iLect '
+          'uses your personal information to. We are transparent to the people '
+          'and always on the information that we collect.\n\n'
+          '3. If you have any concerns about how iLect use your personal information, '
+          'we will cooperate with you in order to resolve such concerns.\n\n'
+          '4. iLect will perform all justifiable in order to protect your information '
+          'from being used in the wrong way and to keep safe.\n\n'
+          '5. iLect shall comply with laws and regulations on data protection that '
+          'apply to us by the various data protection authorities. '
+          'If there is no data protection law, we will act in accordance '
+          'with generally accepted principles governing data protection.',
+      privacyPage0TH =
+          '      นโยบายความเป็นส่วนตัวฉบับนี้ถูกสร้างขึ้นโดยแอปพลิเคชัน iLect '
+          '(ในที่นี้จะใช้คำแทนว่า “เรา”, “ของเรา”, หรือ iLect) '
+          'ซึ่งมีวัตถุประสงค์เพื่อป้องกันและรักษาความเป็นส่วนตัวของผู้ใช้แอพพลิเคชั่นดังนี้\n\n'
+          '1. iLect ให้คุณค่าความไว้วางใจที่ท่านมีให้แก่เราจากการที่ได้ให้ข้อมูลส่วนตัวของท่านกับเรา  '
+          'iLect จะใช้ข้อมูลส่วนตัวของท่านในทางที่เป็นธรรมและควรค่าแก่ความไว้วางใจดังกล่าวนั้นเสมอ\n\n'
+          '2. ท่านมีสิทธิ์ได้รับข้อมูลที่ชัดเจนเกี่ยวกับวิธีการที่ iLect ใช้ข้อมูลส่วนตัวของท่าน  iLect '
+          'จะโปร่งใสกับท่านเสมอในเรื่องข้อมูลที่เราเก็บรวบรวม\n\n'
+          '3. หากท่านมีข้อกังวลใดๆเกี่ยวกับวิธีการที่ iLect ใช้ข้อมูลส่วนตัวของท่าน '
+          'เราจะร่วมมือกับท่านเพื่อแก้ไขข้อกังวลดังกล่าวนั้นโดยพลัน\n\n'
+          '4. iLect จะดำเนินการอันสมควรทั้งปวงเพื่อปกป้องข้อมูลของท่านจากการถูกนำไปใช้ในทางที่ผิด '
+          'และเพื่อรักษาข้อมูลดังกล่าวไว้ให้ปลอดภัย\n\n'
+          '5. iLect จะปฏิบัติตามกฎหมายและข้อบังคับว่าด้วยการคุ้มครองข้อมูลซึ่งใช้บังคับอยู่ทั้งปวง '
+          'และเราจะให้ความร่วมมือกับเจ้าหน้าที่ผู้คุ้มครองข้อมูลต่างๆ หากไม่มีกฎหมายคุ้มครองข้อมูล'
+          'ทางเราก็จะปฏิบัติตามหลักการอันเป็นที่ยอมรับทั่วไปว่าด้วยการคุ้มครองข้อมูล',
       searchAlertButton = 'Show in',
       searchAlertButtonTH = 'แสดงใน',
       searchAlertDialog0 = 'You followed a link that requires the app \“',
@@ -225,6 +258,29 @@ class ConstantData {
       searchAlertDialogTitleTH = 'รับ',
       searchSnackBar = 'Redirect to ',
       searchSnackBarTH = 'กำลังเปิดไปยัง ',
+      servicePage0 =
+          'iLect is an application that is currently in the experiment and development, '
+          'which is helping people with the problems of communication with others. '
+          'In the matter of basic needs, '
+          'there are also restrictions on the number of choices. '
+          'These are Terms of Service as follows:\n\n'
+          '1. iLect reserves the right to modify the terms and conditions of use '
+          'of this service without prior notice.\n\n'
+          '2. iLect reserves the right to verify the accuracy of the information '
+          'within the application. We will not be liable for any damages, including '
+          'injury and loss expenses incurred both directly and indirectly, '
+          'by chance or as a sequel to the usage of the application in all cases.',
+      servicePage0TH =
+          '      iLect เป็นแอปพลิเคชันที่กำลังอยู่ในช่วงทดลองและพัฒนา'
+          'เพื่อช่วยเหลือผู้ที่มีปัญหาเรื่องของการสื่อสารกับผู้อื่นในแง่ของความต้องการขั้นพื้นฐานเป็นหลัก '
+          'ทำให้ยังมีข้อจำกัดในการให้บริการและจำนวนตัวเลือกที่ปรากฏให้ใช้งาน '
+          'โดยมีเงื่อนไขในการให้บริการดังนี้\n\n'
+          '1. iLect ขอสงวนสิทธิ์ในการที่จะแก้ไขข้อกำหนดและเงื่อนไขในการให้บริการ'
+          'โดยไม่ต้องแจ้งให้ทราบล่วงหน้า\n\n'
+          '2. iLect ขอสงวนสิทธิ์ในการยืนยันความถูกต้องของข้อมูลต่างๆภายในแอปพลิเคชันนี้ '
+          'เราจะไม่รับผิดชอบในความเสียหายใดๆ ซึ่งรวมถึงความสูญเสีย การบาดเจ็บ '
+          'และค่าใช้จ่ายที่เกิดขึ้นทั้งทางตรง ทางอ้อม โดยบังเอิญ '
+          'หรือเป็นผลที่เกิดขึ้นตามมาสืบเนื่องจากการใช้งานแอปพลิเคชันในทุกกรณี',
       share0 = 'I\'ve used the iLect app and I want everyone to try it.\n\n'
           'Download now at\nApp Store\n',
       share0TH = 'ฉันได้ใช้แอป iLect แล้วนะ อยากจะให้เพื่อนๆมาลองใช้กัน\n\n'
@@ -250,7 +306,7 @@ class ConstantData {
       sysinfoListTileTitle8TH = 'ภาษา',
       timeFormat = ' HH:mm:ss ',
       timeFormatTH = ' H นาฬิกา m นาที s วินาที ',
-      version = '0.8.1',
+      version = '0.9',
 
       // Page titles
       feedback = 'Send Feedback',
@@ -310,6 +366,7 @@ class LocalizationData {
       Tag.formatTime: ConstantData().timeFormat,
       Tag.home: ConstantData().homePage0,
       Tag.privacy: ConstantData().privacy,
+      Tag.privacy0: ConstantData().privacyPage0,
       Tag.search: ConstantData().search,
       Tag.search0: ConstantData().searchAlertDialogTitle,
       Tag.search1: ConstantData().searchAlertDialog0,
@@ -317,6 +374,7 @@ class LocalizationData {
       Tag.search3: ConstantData().searchAlertButton,
       Tag.search4: ConstantData().searchSnackBar,
       Tag.service: ConstantData().service,
+      Tag.service0: ConstantData().servicePage0,
       Tag.share: ConstantData().share0 +
           ConstantData().ilectAppStoreUrl +
           ConstantData().share1 +
@@ -379,6 +437,7 @@ class LocalizationData {
       Tag.formatTime: ConstantData().timeFormatTH,
       Tag.home: ConstantData().homePage0TH,
       Tag.privacy: ConstantData().privacyTH,
+      Tag.privacy0: ConstantData().privacyPage0TH,
       Tag.search: ConstantData().searchTH,
       Tag.search0: ConstantData().searchAlertDialogTitleTH,
       Tag.search1: ConstantData().searchAlertDialog0TH,
@@ -386,6 +445,7 @@ class LocalizationData {
       Tag.search3: ConstantData().searchAlertButtonTH,
       Tag.search4: ConstantData().searchSnackBarTH,
       Tag.service: ConstantData().serviceTH,
+      Tag.service0: ConstantData().servicePage0TH,
       Tag.share: ConstantData().share0TH +
           ConstantData().ilectAppStoreUrl +
           ConstantData().share1 +
@@ -572,6 +632,7 @@ enum Tag {
   formatTime,
   home,
   privacy,
+  privacy0,
   search,
   search0,
   search1,
@@ -579,6 +640,7 @@ enum Tag {
   search3,
   search4,
   service,
+  service0,
   share,
   snackbar,
   sysinfo,
